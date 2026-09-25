@@ -18,7 +18,7 @@ Clips rejected:
 ## First clean WR clip
 
 clip_id:
-pose_debug.mp4 — skeleton tracks through burst? Y/N
+pose_debug.json / pose_confidence_heatmap.npy — joints confident through burst? Y/N
 joint flip or lag? Y/N notes:
 calibration_debug — mode: field_line / height_prior / uncalibrated
 field had visible lines? Y/N
@@ -32,11 +32,14 @@ release or break:
 
 Off by more than 3 frames? Y/N
 
-## WR cue sanity (plausible bands, not targets)
+## WR cue sanity (what you see vs what the pipeline says)
 
-shin_angle_at_contact (30–50 plausible):
-hip_height_at_contact (0.75–0.95 plausible):
-outside band on a clean clip → feature formula, not the model.
+No reference bands are given here: the earlier 30–50° and 0.75–0.95 bands had no source and are marked
+`unverified` (see `docs/audit/open_questions.md`). Record the value and whether it matches what you see.
+
+shin_angle_at_contact (deg from vertical): value ____ matches film? Y/N
+hip_height_at_contact (ankle→hip / ankle→nose): value ____ matches film? Y/N
+clearly wrong on a clean clip → feature formula first, then the model.
 
 ## Decision
 
