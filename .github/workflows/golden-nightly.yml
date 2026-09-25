@@ -13,3 +13,4 @@ jobs:
           python-version: "3.11"
       - run: python -m pip install -e ".[dev]"
       - run: python -m pytest tests/golden/test_pose_pipeline.py -q
+      - run: python -m services.golden_set.harness

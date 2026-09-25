@@ -1,4 +1,4 @@
-.PHONY: install test lint api worker valuation console up
+.PHONY: install test lint golden api worker valuation console up
 
 install:
 	python3 -m pip install -e ".[dev]"
@@ -10,6 +10,9 @@ test:
 lint:
 	python3 -m ruff check services packages tests || true
 	python3 -m compileall services packages tests
+
+golden:
+	python3 -m services.golden_set.harness
 
 api:
 	uvicorn services.api.app:app --reload --port 8000

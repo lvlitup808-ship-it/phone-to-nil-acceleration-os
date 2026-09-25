@@ -1,13 +1,7 @@
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 from packages.shared.slice2 import Slice2Cue
 from services.cv_worker.pipeline_v2 import run_pose_assessment
-
-ROOT = Path(__file__).resolve().parents[2]
-REPORT = ROOT / "docs/validation/slice2_report.md"
 
 
 def test_wr_six_cues_and_status():
@@ -43,23 +37,25 @@ def test_pose_api_additive():
     assert not [k for k in body if k.endswith("_score")]
 
 
-def test_golden_harness_writes_pending_report():
-    manifest = json.loads((ROOT / "data/golden_set/manifest.json").read_text())
-    lines = [
-        "# Slice 2 validation report",
-        "",
-        f"golden_set: {manifest.get('golden_set')}",
-        "real_mp4_present: false",
-        "Do not treat this file as a performance claim.",
-        "",
-    ]
-    for clip in manifest["clips"]:
-        movement = "release" if clip["movement"] == "release" else "break"
-        out = run_pose_assessment(movement=movement, clip_id=clip["clip_id"], height_cm=clip.get("athlete_height_cm"))
-        lines.append(f"- {clip['clip_id']}: status={out['assessment_status']} cues={len(out['cues'])} source=fixture")
-    REPORT.parent.mkdir(parents=True, exist_ok=True)
-    REPORT.write_text("\n".join(lines) + "\n")
-    assert "pending" in REPORT.read_text()
+def test_golden_harness_prints_honesty_line_and_writes_pending_report(tmp_path, capsys):
+    from services.golden_set.harness import HONESTY_LINE, main
+
+    out = tmp_path / "slice2_report.md"
+    assert main(["--write", "--out", str(out)]) == 0
+    printed = capsys.readouterr().out
+    assert HONESTY_LINE in printed
+    assert "do not treat this as athlete validation" in printed.lower()
+    text = out.read_text()
+    assert text == printed
+    assert "golden_set: pending" in text
+    assert "real_mp4_present: false" in text
+    assert "MAE" not in text.replace("No athlete-film MAE is published", "")
+
+
+def test_committed_report_matches_harness():
+    from services.golden_set.harness import REPORT, build_report
+
+    assert REPORT.read_text() == build_report()
 
 
 def test_pose_api_rejects_path_traversal(tmp_path):
