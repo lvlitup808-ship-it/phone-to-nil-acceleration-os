@@ -135,3 +135,24 @@ values in Slice 1 keys).
 - The shin / lean angle fix is verified on synthetic geometry only (unit tests with known segments), not on film.
 
 No validation numbers were fabricated in this pass.
+
+## Red-green check (Superpowers `verification-before-completion`)
+
+For each fix, the source file(s) were reset to `main` while keeping the new test, the test was run, then
+the fix was restored and the test re-run. All 13 went red with the fix reverted and green with it restored.
+
+| Fix | Test | Reverted | Restored |
+| --- | --- | --- | --- |
+| Angle clamp | `test_cue_math.py::test_angle_from_vertical_is_symmetric_in_image_y` | fail | pass |
+| Invented GCT | `test_cue_math.py::test_gct_is_not_invented_without_a_second_step` | fail | pass |
+| Invented recovery step | `test_cue_math.py::test_recovery_step_is_not_invented_when_order_is_wrong` | fail | pass |
+| NIL numbers | `test_health_and_loop.py::test_valuation_emits_no_invented_numbers` | fail | pass |
+| Gate derived from data | `test_gates.py::test_real_labels_count_and_inter_rater` | fail | pass |
+| Units | `test_cue_math.py::test_units_match_what_is_computed` | fail | pass |
+| Retake codes | `test_docs_consistency.py::test_retake_packet_codes_match_validator` | fail | pass |
+| README routes | `test_docs_consistency.py::test_readme_endpoints_exist` | fail | pass |
+| Lint self-match | `tests/lint` | fail | pass |
+| Path traversal | `test_pose_pipeline.py::test_pose_api_rejects_path_traversal` | fail | pass |
+| Passport consent | `test_gates.py::test_passport_consent_is_looked_up_not_asserted` | fail | pass |
+| No synthetic fallback | `test_status_enums.py::test_adapter_failure_on_real_frames_is_error_not_synthetic` | fail | pass |
+| Consent purge | `test_film_first.py::test_revoke_actually_deletes_what_the_receipt_lists` | fail (purgers disabled; a whole-file revert breaks imports, so it was checked this way) | pass |
