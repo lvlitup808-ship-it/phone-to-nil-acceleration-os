@@ -10,6 +10,7 @@ No validation numbers were fabricated in this pass.
 | Check | Baseline (`main` @ 373a48a) | Post-repair |
 | --- | --- | --- |
 | `pip install -e ".[dev]"` | ok | ok (also from a fresh `git clone` into a new venv; that venv reused already-installed system packages, so dependency downloads were not re-tested) |
+| CI on PR #12 (head `6d719c6`) | — | `python`, `check`, `docker` all green |
 | `pytest tests -q` | 22 passed, **1 failed** (23 tests) | **66 passed, 0 failed** (58 after the repair pass + 8 from the review round) |
 | Working tree after tests | dirty (`slice2_report.md` rewritten, `artifacts/` created) | clean |
 | `ruff check` | 29 findings, unconfigured rules, `make lint` ignores failures | 0 findings with the pinned rule set; `make lint` and CI fail on findings. With ruff 0.16.9's unconfigured defaults (`--isolated`) 14 stylistic findings remain, mostly BLE001 on the intentional adapter/Jev fallbacks |
@@ -22,7 +23,7 @@ No validation numbers were fabricated in this pass.
 | `/passport/{id}` | assessments + hard-coded consent `true` | `blocked_on_golden_set`, consent looked up |
 | `/gates/golden` | hard-coded zeros | derived from `data/golden_set/`; still 0/10, 0/10 (true state) |
 | Golden harness | test only; wrote a tracked file; printed nothing | `python -m services.golden_set.harness` prints `golden_set: pending` and "Do not treat this as athlete validation." |
-| Docker image build | not run | **not run** — no Docker daemon in this environment (`unverified`) |
+| Docker image build | not run | passes in CI (`docker` job on PR #12, head `6d719c6`); not run locally (no Docker daemon here) |
 
 ## Gates and disciplines
 
@@ -114,7 +115,6 @@ Config / data
 - Shin-angle sanity band 30–50° and hip-height band 0.75–0.95 (`session_1.md`, `session_1_report.md`) — no source; hip band conflicts with the formula.
 - Session 1 ingest pass-rate "6–8" (`schedule.md`) — planning guess, no data.
 - GCT heuristic factor 0.45 and 90 ms floor — no source (open question 5).
-- Docker image build — not run here.
 - `apps/` (Next.js / Expo) — not built or type-checked.
 - MediaPipe on real frames — never exercised (no `mediapipe`, no film).
 
@@ -129,7 +129,6 @@ values in Slice 1 keys) and 25 (`/pose/assess` rejects unknown / revoked consent
 
 ## What was not verified
 
-- Docker build (no daemon).
 - Frontend apps.
 - Any behaviour on real film: there is none in the repo.
 - The shin / lean angle fix is verified on synthetic geometry only (unit tests with known segments), not on film.
