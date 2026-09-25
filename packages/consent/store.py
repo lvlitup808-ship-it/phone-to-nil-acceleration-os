@@ -41,6 +41,14 @@ class ConsentStore:
         self.receipts[receipt["receipt_id"]] = receipt
         return receipt
 
+    def active_scopes(self, athlete_id: str) -> dict[str, bool]:
+        """Scopes currently granted and not revoked. Nothing on file means all False."""
+        granted: set[str] = set()
+        for row in self.consents.values():
+            if row["athlete_id"] == athlete_id and not row.get("revoked"):
+                granted.update(row["consent_scope"])
+        return {"capture": "capture" in granted, "coach": "coach" in granted, "public": "public" in granted}
+
     def attach(self, assessment: dict[str, Any], consent_id: str) -> dict[str, Any]:
         row = self.consents.get(consent_id)
         assessment["consent_id"] = consent_id

@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from packages.capture.contract import validate_ingest
 from packages.consent.store import ConsentStore
-from services.api.gates import blocked_reason, prescription_enabled
+from services.api.gates import gate_state
 from services.cv_worker.ingest.naming import validate_name
 
 router = APIRouter()
@@ -101,9 +101,7 @@ def assignments() -> dict[str, Any]:
 
 @router.get("/gates/golden")
 def golden_gate() -> dict[str, Any]:
-    if prescription_enabled():
-        return {"status": "open"}
-    return blocked_reason()
+    return gate_state()
 
 
 @router.get("/nil-band/{athlete_id}/scenarios")

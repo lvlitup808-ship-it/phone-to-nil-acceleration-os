@@ -16,6 +16,7 @@ from packages.evidence.pipeline import EvidencePipeline
 from packages.judgment.client import JudgmentClient
 from packages.shared.models import ClipQuality, NILBand, PositionTemplate
 from services.api.film import CONSENT, router as film_router
+from services.api.gates import gate_state
 
 app = FastAPI(
     title="Phone-to-NIL Acceleration OS",
@@ -146,11 +147,20 @@ def prescribe(assessment_id: str) -> dict[str, Any]:
     row = CONSENT.cascade(row)
     if row.get("assessment_status") == "scope_revoked":
         raise HTTPException(403, "consent revoked")
+    gate = gate_state()
+    if gate["status"] != "open":
+        return {"assessment_id": assessment_id, "primary_cue": None, "drills": [], "grounded": False, **gate}
     first = row["cues"][0]
     cue = first.get("id") or first.get("name")
     pack = EVIDENCE.run("drill prescription", cue)
     reviewed = [d for d in pack["drills"] if d.get("coach_reviewed") is not False]
-    return {"assessment_id": assessment_id, "primary_cue": cue, "drills": reviewed, "grounded": pack["grounded"]}
+    return {
+        "assessment_id": assessment_id,
+        "primary_cue": cue,
+        "drills": reviewed,
+        "grounded": pack["grounded"],
+        "status": "open",
+    }
 
 
 def artifacts_dir_for(clip_id: str) -> Path:
@@ -202,14 +212,23 @@ def retest(body: RetestIn) -> dict[str, Any]:
 @app.get("/nil-band/{athlete_id}")
 def nil_band(athlete_id: str) -> dict[str, Any]:
     from services.valuation.engine import estimate_band
-    return estimate_band(athlete_id).model_dump()
+
+    band = estimate_band(athlete_id).model_dump()
+    gate = gate_state()
+    if gate["status"] != "open":
+        band.update(gate)
+    return band
 
 
 @app.get("/passport/{athlete_id}")
 def passport(athlete_id: str) -> dict[str, Any]:
+    consent = CONSENT.active_scopes(athlete_id)
+    gate = gate_state()
+    if gate["status"] != "open":
+        return {"athlete_id": athlete_id, "assessments": [], "consent": consent, **gate}
     assessments = [CONSENT.cascade(dict(a)) for a in STORE["assessments"].values() if a["athlete_id"] == athlete_id]
     assessments = [a for a in assessments if a.get("assessment_status") != "scope_revoked"]
-    return {"athlete_id": athlete_id, "assessments": assessments, "consent": {"capture": True, "coach": True, "public": False}}
+    return {"athlete_id": athlete_id, "assessments": assessments, "consent": consent, "status": "open"}
 
 
 @app.post("/coach/annotate")

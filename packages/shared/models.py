@@ -54,16 +54,19 @@ class Assessment(BaseModel):
 
 
 class NILBand(BaseModel):
+    """Slice 1 shape. Numbers stay null until a sourced comp dataset exists."""
+
     athlete_id: str
     currency: str = "USD"
-    p25: int
-    p50: int
-    p75: int
-    confidence: float
+    p25: int | None = None
+    p50: int | None = None
+    p75: int | None = None
+    confidence: float | None = None
     assumptions: list[str]
     comp_cluster_ids: list[str]
     disclaimer_version: str
     counterfactuals: dict[str, Any] = {}
+    status: str = "schema_only"
 
 
 class Drill(BaseModel):
