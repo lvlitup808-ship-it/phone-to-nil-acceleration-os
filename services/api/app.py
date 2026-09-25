@@ -14,7 +14,7 @@ from packages.shared.models import ClipQuality, NILBand, PositionTemplate
 
 app = FastAPI(
     title="Phone-to-NIL Acceleration OS",
-    version="0.1.0",
+    version="0.2.0",
     description="Capture → Assess → Prescribe → Re-test → Value",
 )
 
@@ -51,6 +51,15 @@ class AnnotateIn(BaseModel):
     note: str
 
 
+class PoseAssessIn(BaseModel):
+    athlete_id: str
+    clip_id: str
+    movement: str = Field(pattern="^(release|break)$")
+    side_clip: bool = True
+    height_cm: float | None = 185.0
+    minors_mode: bool = False
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -71,9 +80,7 @@ def upload(body: UploadIn) -> dict[str, Any]:
         score=body.quality_score,
         usable=usable and not synthetic,
         reasons=[] if usable else ["low quality or suspected synthetic"],
-        retake_instructions=None
-        if usable
-        else "Retake side-on, 5-10s, phone stable, full body in frame, 60fps if possible.",
+        retake_instructions=None if usable else "Retake side-on, 5-10s, phone stable, full body in frame, 60fps if possible.",
     )
     clip_id = str(uuid.uuid4())
     STORE["clips"][clip_id] = {**body.model_dump(), "id": clip_id, "quality": quality.model_dump()}
@@ -115,9 +122,35 @@ def prescribe(assessment_id: str) -> dict[str, Any]:
     row = STORE["assessments"].get(assessment_id)
     if not row:
         raise HTTPException(404, "assessment not found")
-    cue = row["cues"][0]["id"]
+    first = row["cues"][0]
+    cue = first.get("id") or first.get("name")
     pack = EVIDENCE.run("drill prescription", cue)
-    return {"assessment_id": assessment_id, "primary_cue": cue, "drills": pack["drills"], "grounded": pack["grounded"]}
+    reviewed = [d for d in pack["drills"] if d.get("coach_reviewed") is not False]
+    return {"assessment_id": assessment_id, "primary_cue": cue, "drills": reviewed, "grounded": pack["grounded"]}
+
+
+@app.post("/pose/assess")
+def pose_assess(body: PoseAssessIn) -> dict[str, Any]:
+    from pathlib import Path
+
+    from services.cv_worker.pipeline_v2 import run_pose_assessment
+
+    out = run_pose_assessment(
+        movement=body.movement,
+        clip_id=body.clip_id,
+        side_clip=body.side_clip,
+        height_cm=body.height_cm,
+        athlete_id=body.athlete_id,
+        artifacts_dir=Path("artifacts") / body.clip_id,
+        judge=JUDGE,
+    )
+    out["minors_mode"] = body.minors_mode
+    out["id"] = str(uuid.uuid4())
+    out["athlete_id"] = body.athlete_id
+    if out.get("synthetic_risk") == "high":
+        out["nil_band_blocked"] = True
+    STORE["assessments"][out["id"]] = out
+    return out
 
 
 @app.post("/retest")
