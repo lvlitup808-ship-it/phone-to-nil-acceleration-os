@@ -20,7 +20,7 @@ class MediaPipePoseAdapter:
     model_id = "mediapipe_blazepose"
     model_version = POSE_MODEL_VERSION_MEDIAPIPE
 
-    def infer(self, frames: list[np.ndarray]) -> PoseSequence:
+    def infer(self, frames: list[np.ndarray], fps: float = 60.0) -> PoseSequence:
         try:
             import mediapipe as mp
         except Exception as exc:
@@ -28,7 +28,6 @@ class MediaPipePoseAdapter:
         if not frames:
             raise ValueError("no frames")
         h, w = frames[0].shape[:2]
-        fps = 60.0
         raw = np.zeros((len(frames), 17, 3), dtype=float)
         pose = mp.solutions.pose.Pose(static_image_mode=False, model_complexity=1, enable_segmentation=False)
         try:

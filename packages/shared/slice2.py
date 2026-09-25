@@ -12,6 +12,7 @@ class AssessmentStatus(str, Enum):
     insufficient_data = "insufficient_data"
     uncalibrated = "uncalibrated"
     error = "error"
+    scope_revoked = "scope_revoked"
 
 
 class CueStatus(str, Enum):

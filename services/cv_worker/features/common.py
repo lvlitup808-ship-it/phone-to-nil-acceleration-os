@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from packages.shared.slice2 import CueStatus
 from services.cv_worker.pose.base import L_HIP, R_HIP
 
 FEATURE_ALGORITHM_VERSION = "wr_db_v1"
@@ -12,6 +13,7 @@ def mid_hip(kp_frame):
 
 
 def envelope(name, value, unit, confidence, calibration_mode, frames, clip_id, status="ok"):
+    status = CueStatus(status).value
     return {
         "name": name,
         "value": None if status == "uncalibrated" else value,

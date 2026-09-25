@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from packages.shared.slice2 import AssessmentStatus
 from services.cv_worker.calibration.field_line import CALIBRATION_ALGORITHM_VERSION
 from services.cv_worker.calibration.resolve import resolve_calibration
 from services.cv_worker.confidence import RETAKE, rollup
@@ -16,6 +17,7 @@ from services.cv_worker.features.db_break import extract_db
 from services.cv_worker.features.wr_release import extract_wr
 from services.cv_worker.pose.factory import get_adapter
 from services.cv_worker.pose.fixture_adapter import FixturePoseAdapter
+from services.cv_worker.pose.mediapipe_adapter import MediaPipePoseAdapter
 
 PIPELINE_VERSION = "slice2.0.0"
 LABELING_PROTOCOL_VERSION = "1.0.0"
@@ -64,6 +66,7 @@ def run_pose_assessment(
     side_clip: bool = True,
     frames=None,
     height_cm: float | None = 185.0,
+    fps: float = 60.0,
     imu_tilt_deg: float | None = None,
     athlete_id: str = "unknown",
     artifacts_dir: Path | None = None,
@@ -77,10 +80,11 @@ def run_pose_assessment(
         seq = adapter.infer(None)
     else:
         try:
-            seq = adapter.infer(frames)
-        except Exception:
-            adapter = FixturePoseAdapter()
-            seq = adapter.infer(frames)
+            seq = adapter.infer(frames, fps=fps) if isinstance(adapter, MediaPipePoseAdapter) else adapter.infer(frames)
+        except Exception as exc:  # noqa: BLE001 - any adapter failure becomes status=error
+            # Never substitute synthetic poses for a real clip.
+            return _error_result(movement, clip_id, adapter, exc)
+    pose_source = "fixture" if isinstance(adapter, FixturePoseAdapter) else "model"
     standing = frames[5] if frames is not None and len(frames) > 5 else None
     calibration = resolve_calibration(standing, seq.keypoints, height_cm, imu_tilt_deg)
     events = detect_events(seq, movement)
@@ -108,14 +112,7 @@ def run_pose_assessment(
         "calibration_confidence": calibration.confidence,
         "synthetic_risk": _synthetic_risk(judge, {}),
         "minors_mode": False,
-        "versions": {
-            "pose_model_version": seq.model_version,
-            "calibration_algorithm_version": CALIBRATION_ALGORITHM_VERSION,
-            "feature_algorithm_version": FEATURE_ALGORITHM_VERSION,
-            "labeling_protocol_version": LABELING_PROTOCOL_VERSION,
-            "disclaimer_version": DISCLAIMER_VERSION,
-            "pipeline_version": PIPELINE_VERSION,
-        },
+        "versions": _versions(seq.model_version),
         "assessment_lineage": {
             "clip_ids": [clip_id],
             "pipeline_version": PIPELINE_VERSION,
@@ -123,6 +120,44 @@ def run_pose_assessment(
         },
         "artifacts": artifacts,
         "golden_set": "pending",
+        "pose_source": pose_source,
+    }
+
+
+def _versions(pose_model_version: str) -> dict[str, str]:
+    return {
+        "pose_model_version": pose_model_version,
+        "calibration_algorithm_version": CALIBRATION_ALGORITHM_VERSION,
+        "feature_algorithm_version": FEATURE_ALGORITHM_VERSION,
+        "labeling_protocol_version": LABELING_PROTOCOL_VERSION,
+        "disclaimer_version": DISCLAIMER_VERSION,
+        "pipeline_version": PIPELINE_VERSION,
+    }
+
+
+def _error_result(movement: str, clip_id: str, adapter, exc: Exception) -> dict[str, Any]:
+    return {
+        "assessment_status": AssessmentStatus.error.value,
+        "retake_instruction": RETAKE["error"],
+        "movement": movement,
+        "template": "wr_release" if movement == "release" else "db_break",
+        "events": [],
+        "cues": [],
+        "fix_this_first": None,
+        "calibration_mode": None,
+        "calibration_confidence": 0.0,
+        "synthetic_risk": None,
+        "minors_mode": False,
+        "versions": _versions(getattr(adapter, "model_version", "unknown")),
+        "assessment_lineage": {
+            "clip_ids": [clip_id],
+            "pipeline_version": PIPELINE_VERSION,
+            "produced_at": datetime.now(timezone.utc).isoformat(),
+        },
+        "artifacts": {},
+        "golden_set": "pending",
+        "pose_source": "error",
+        "pose_error": f"{type(exc).__name__}: {exc}",
     }
 
 

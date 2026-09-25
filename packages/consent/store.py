@@ -5,6 +5,8 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
+from packages.shared.slice2 import AssessmentStatus
+
 
 class ConsentStore:
     def __init__(self) -> None:
@@ -59,7 +61,7 @@ class ConsentStore:
         cid = assessment.get("consent_id")
         row = self.consents.get(cid) if cid else None
         if row and row.get("revoked"):
-            assessment["assessment_status"] = "scope_revoked"
+            assessment["assessment_status"] = AssessmentStatus.scope_revoked.value
             assessment["cues"] = []
             assessment["events"] = []
             assessment["nil_band_blocked"] = True
