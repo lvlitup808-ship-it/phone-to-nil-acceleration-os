@@ -8,8 +8,10 @@ test:
 	python3 -m pytest tests -q
 
 lint:
-	python3 -m ruff check services packages tests || true
-	python3 -m compileall services packages tests
+	python3 -m ruff check services packages tests
+	python3 -m mypy services packages
+	python3 -m compileall -q services packages tests
+	python3 -m packages.shared.schemas
 
 golden:
 	python3 -m services.golden_set.harness

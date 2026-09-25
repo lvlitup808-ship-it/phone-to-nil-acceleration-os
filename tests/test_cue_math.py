@@ -1,11 +1,11 @@
 import pytest
 
+from services.cv_worker.calibration.field_line import Calibration
 from services.cv_worker.events.detector import Event
 from services.cv_worker.features.common import angle_from_vertical
 from services.cv_worker.features.db_break import extract_db
 from services.cv_worker.features.wr_release import extract_wr
 from services.cv_worker.pose.fixture_adapter import FixturePoseAdapter
-from services.cv_worker.calibration.field_line import Calibration
 
 
 @pytest.mark.parametrize(

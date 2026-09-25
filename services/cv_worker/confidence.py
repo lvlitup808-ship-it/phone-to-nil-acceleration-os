@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import numpy as np
+
 from packages.shared.slice2 import AssessmentStatus, CueStatus
 
 JOINT_CONF_MIN = 0.4
@@ -16,7 +18,7 @@ RETAKE = {
 }
 
 
-def joint_ok(kp_frame, idxs: list[int]) -> bool:
+def joint_ok(kp_frame: np.ndarray, idxs: list[int]) -> bool:
     return all(float(kp_frame[i, 2]) >= JOINT_CONF_MIN for i in idxs)
 
 

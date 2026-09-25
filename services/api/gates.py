@@ -58,7 +58,7 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
         if path.name.startswith("_"):
             continue
         label = _load_json(path) or {}
-        cid = label.get("clip_id")
+        cid = str(label.get("clip_id", ""))
         if cid not in filmed or label.get("excluded"):
             continue
         if label.get("disputed") or filmed[cid].get("disputed"):

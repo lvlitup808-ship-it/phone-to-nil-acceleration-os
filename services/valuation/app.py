@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import FastAPI
 
 from services.valuation.engine import estimate_band
@@ -11,5 +13,5 @@ def health() -> dict[str, str]:
 
 
 @app.get("/nil-band/{athlete_id}")
-def band(athlete_id: str, template: str = "wr_release", school_level: str = "hs"):
+def band(athlete_id: str, template: str = "wr_release", school_level: str = "hs") -> dict[str, Any]:
     return estimate_band(athlete_id, template, school_level).model_dump()

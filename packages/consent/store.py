@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
 from collections.abc import Callable
+from datetime import UTC, datetime
 from typing import Any
 
 from packages.shared.slice2 import AssessmentStatus
@@ -17,14 +17,14 @@ class ConsentStore:
         self.purgers: list[Callable[[dict[str, Any]], dict[str, int]]] = []
 
     def grant(self, athlete_id: str, scope: list[str], parent: bool = False) -> dict[str, Any]:
-        cid = f"cns_{hashlib.sha256(f'{athlete_id}:{datetime.now(timezone.utc).isoformat()}'.encode()).hexdigest()[:10]}"
+        cid = f"cns_{hashlib.sha256(f'{athlete_id}:{datetime.now(UTC).isoformat()}'.encode()).hexdigest()[:10]}"
         row = {
             "consent_id": cid,
             "athlete_id": athlete_id,
             "consent_scope": scope,
             "revoked": False,
             "parent_attested": parent,
-            "granted_at": datetime.now(timezone.utc).isoformat(),
+            "granted_at": datetime.now(UTC).isoformat(),
         }
         self.consents[cid] = row
         return row
@@ -34,8 +34,8 @@ class ConsentStore:
         if not row:
             raise KeyError(consent_id)
         row["revoked"] = True
-        row["revoked_at"] = datetime.now(timezone.utc).isoformat()
-        counts = {kind: 0 for kind in artifacts}
+        row["revoked_at"] = datetime.now(UTC).isoformat()
+        counts = dict.fromkeys(artifacts, 0)
         for purge in self.purgers:
             for kind, n in purge(row).items():
                 counts[kind] = counts.get(kind, 0) + n

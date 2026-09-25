@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -75,13 +75,13 @@ def revoke_consent(consent_id: str) -> dict[str, Any]:
     try:
         return CONSENT.revoke(consent_id, artifacts=["clips", "pose_debug", "passport_share"])
     except KeyError:
-        raise HTTPException(404, "consent not found")
+        raise HTTPException(404, "consent not found") from None
 
 
 @router.post("/share-link")
 def share_link(body: ShareIn) -> dict[str, Any]:
     ttl = min(max(body.ttl_days, 1), 30)
-    expires = datetime.now(timezone.utc) + timedelta(days=ttl)
+    expires = datetime.now(UTC) + timedelta(days=ttl)
     token = f"shr_{body.athlete_id}_{expires.strftime('%Y%m%d')}"
     SHARE[token] = {
         "token": token,

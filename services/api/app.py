@@ -4,7 +4,7 @@ import os
 import re
 import shutil
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -15,8 +15,9 @@ from packages.biomech.features import extract_cues
 from packages.capture.contract import validate_ingest
 from packages.evidence.pipeline import EvidencePipeline
 from packages.judgment.client import JudgmentClient
-from packages.shared.models import ClipQuality, NILBand, PositionTemplate
-from services.api.film import CONSENT, router as film_router
+from packages.shared.models import ClipQuality, PositionTemplate
+from services.api.film import CONSENT
+from services.api.film import router as film_router
 from services.api.gates import gate_state
 
 app = FastAPI(
@@ -126,7 +127,7 @@ def assess(body: AssessIn) -> dict[str, Any]:
         "template": body.template.value,
         "cues": [c.model_dump() for c in cues],
         "evidence": evidence,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
     }
     STORE["assessments"][assessment_id] = row
     return row

@@ -27,6 +27,7 @@ def test_uncalibrated_never_emits_a_number():
 
 def test_pose_api_additive():
     from fastapi.testclient import TestClient
+
     from services.api.app import app
 
     c = TestClient(app)

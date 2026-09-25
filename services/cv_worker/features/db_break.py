@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import numpy as np
 
+from services.cv_worker.calibration.field_line import Calibration
 from services.cv_worker.confidence import apply_gate, joint_ok
+from services.cv_worker.events.detector import Event
 from services.cv_worker.features.common import angle_from_vertical, envelope, event_map, mid_hip
 from services.cv_worker.pose.base import L_ANKLE, L_HIP, NOSE, R_ANKLE, R_HIP, R_KNEE, PoseSequence
 
 
-def extract_db(seq: PoseSequence, events, calibration, clip_id: str) -> list[dict]:
+def extract_db(seq: PoseSequence, events: list[Event], calibration: Calibration, clip_id: str) -> list[dict]:
     em = event_map(events)
     kp = seq.keypoints
     mode = calibration.mode

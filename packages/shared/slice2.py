@@ -34,7 +34,7 @@ class Slice2Cue(BaseModel):
     actionable: dict[str, Any] | None = None
 
     @model_validator(mode="after")
-    def no_number_when_uncalibrated(self) -> "Slice2Cue":
+    def no_number_when_uncalibrated(self) -> Slice2Cue:
         if self.cue_status == CueStatus.uncalibrated:
             object.__setattr__(self, "value", None)
         return self

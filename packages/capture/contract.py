@@ -18,9 +18,9 @@ def validate_ingest(*, fps: float, duration_s: float, angles: list[str], stable_
         reasons.append("duration_not_4_to_12s")
     needed = {"side", "fortyfive"}
     have = {a.replace("45", "fortyfive") for a in angles}
-    if pair_complete is False or (pair_complete is None and not needed.issubset(have) and len(have) < 2):
-        if not needed.issubset(have):
-            reasons.append("missing_side_or_45")
+    pair_missing = pair_complete is False or (pair_complete is None and len(have) < 2)
+    if pair_missing and not needed.issubset(have):
+        reasons.append("missing_side_or_45")
     if not stable_first_500ms:
         reasons.append("phone_unstable_first_500ms")
     if not reasons:

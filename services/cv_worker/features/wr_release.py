@@ -2,9 +2,21 @@ from __future__ import annotations
 
 import numpy as np
 
+from services.cv_worker.calibration.field_line import Calibration
 from services.cv_worker.confidence import apply_gate, joint_ok
+from services.cv_worker.events.detector import Event
 from services.cv_worker.features.common import angle_from_vertical, envelope, event_map, mid_hip
-from services.cv_worker.pose.base import L_ANKLE, L_HIP, L_SHOULDER, NOSE, R_ANKLE, R_HIP, R_KNEE, R_SHOULDER, PoseSequence
+from services.cv_worker.pose.base import (
+    L_ANKLE,
+    L_HIP,
+    L_SHOULDER,
+    NOSE,
+    R_ANKLE,
+    R_HIP,
+    R_KNEE,
+    R_SHOULDER,
+    PoseSequence,
+)
 
 WR_CUES = [
     "first_step_separation", "shin_angle_at_contact", "hip_height_at_contact",
@@ -12,7 +24,9 @@ WR_CUES = [
 ]
 
 
-def extract_wr(seq: PoseSequence, events, calibration, clip_id: str, side_clip: bool) -> list[dict]:
+def extract_wr(
+    seq: PoseSequence, events: list[Event], calibration: Calibration, clip_id: str, side_clip: bool
+) -> list[dict]:
     em = event_map(events)
     kp = seq.keypoints
     mode = calibration.mode
