@@ -18,6 +18,8 @@ from services.cv_worker.pose.base import (
     PoseSequence,
 )
 
+GCT_MIN_MS = 90.0  # unsourced plausibility floor; see docs/audit/open_questions.md #5
+
 WR_CUES = [
     "first_step_separation", "shin_angle_at_contact", "hip_height_at_contact",
     "ground_contact_time_first_step", "lean_at_release", "arm_drive_symmetry",
@@ -71,11 +73,12 @@ def extract_wr(
     else:
         cues.append(envelope("hip_height_at_contact", None, "ratio", 0.0, mode, [], clip_id, "insufficient_data"))
 
-    if fs and "second_step" in em:
+    gct = float(em["second_step"].t_ms - fs.t_ms) * 0.45 if fs and "second_step" in em else None
+    if fs and gct is not None and gct >= GCT_MIN_MS:
         ss = em["second_step"]
-        gct = max(90.0, float(ss.t_ms - fs.t_ms) * 0.45)
         cues.append(envelope("ground_contact_time_first_step", gct, "ms", 0.6, mode, [fs.frame, ss.frame], clip_id, "ok"))
     else:
+        # Below the plausibility floor is reported as missing, not clamped to the floor.
         cues.append(envelope("ground_contact_time_first_step", None, "ms", 0.0, mode, [], clip_id, "insufficient_data"))
 
     if rel:

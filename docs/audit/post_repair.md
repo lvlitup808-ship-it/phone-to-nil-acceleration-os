@@ -10,7 +10,7 @@ No validation numbers were fabricated in this pass.
 | Check | Baseline (`main` @ 373a48a) | Post-repair |
 | --- | --- | --- |
 | `pip install -e ".[dev]"` | ok | ok (also from a fresh `git clone` into a new venv; that venv reused already-installed system packages, so dependency downloads were not re-tested) |
-| `pytest tests -q` | 22 passed, **1 failed** (23 tests) | **58 passed, 0 failed** |
+| `pytest tests -q` | 22 passed, **1 failed** (23 tests) | **66 passed, 0 failed** (58 after the repair pass + 8 from the review round) |
 | Working tree after tests | dirty (`slice2_report.md` rewritten, `artifacts/` created) | clean |
 | `ruff check` | 29 findings, unconfigured rules, `make lint` ignores failures | 0 findings with the pinned rule set; `make lint` and CI fail on findings. With ruff 0.16.9's unconfigured defaults (`--isolated`) 14 stylistic findings remain, mostly BLE001 on the intentional adapter/Jev fallbacks |
 | `mypy services packages` | not configured; ad hoc run clean (48 files) | configured, in `make lint` and CI; clean (52 files) |
@@ -123,9 +123,9 @@ Not marked `unverified` because they are stated as targets, not results: `ICC > 
 
 ## P3 items left open
 
-All 24 are in [`open_questions.md`](open_questions.md) with an owner and a blocking reason. The ones a
-human must decide before merge are 20 (stricter gate) and 21 (blocked routes now return null / empty
-values in Slice 1 keys).
+All 29 are in [`open_questions.md`](open_questions.md) with an owner and a blocking reason. The ones a
+human must decide before merge are 20 (stricter gate), 21 (blocked routes now return null / empty
+values in Slice 1 keys) and 25 (`/pose/assess` rejects unknown / revoked consent ids).
 
 ## What was not verified
 
@@ -156,3 +156,24 @@ the fix was restored and the test re-run. All 13 went red with the fix reverted 
 | Passport consent | `test_gates.py::test_passport_consent_is_looked_up_not_asserted` | fail | pass |
 | No synthetic fallback | `test_status_enums.py::test_adapter_failure_on_real_frames_is_error_not_synthetic` | fail | pass |
 | Consent purge | `test_film_first.py::test_revoke_actually_deletes_what_the_receipt_lists` | fail (purgers disabled; a whole-file revert breaks imports, so it was checked this way) | pass |
+
+## Review round (Superpowers `requesting-code-review`)
+
+An independent reviewer subagent reviewed `373a48a..82390cb` with the Superpowers reviewer template.
+Verdict: "With fixes". No critical issues. Every finding below was reproduced with a failing test first
+(`tests/test_review_fixes.py`, 7 red before the fix), then fixed.
+
+| Finding | Severity | Outcome |
+| --- | --- | --- |
+| `/pose/assess` with a revoked consent still wrote pose-debug files that nothing deleted | Important | Fixed: consent is checked before the pipeline runs; revoked → 403, unknown → 404 |
+| GCT clamped to a 90 ms floor and reported as `ok` (an invented value) | Important | Fixed: below the floor → `null`, `insufficient_data` |
+| Revocation missed an athlete's clips uploaded without `consent_id` | Important | Fixed: those clips are purged too; policy question logged (#26) |
+| `/prescribe` would 500 on an assessment with no cues once the gate opens | Minor | Fixed |
+| Harness hard-coded `source=fixture` | Minor | Fixed: prints the pipeline's `pose_source` (output unchanged today) |
+| Labels without `coach_id` counted as a distinct coach | Minor | Fixed: ignored |
+| Manifest film paths could point outside `data/golden_set/` | Minor | Fixed: must resolve inside it |
+| Valuation service does not report the gate | Minor | Open (#27) |
+| `pose_error` exposes exception text | Minor | Open (#28) |
+| Slice 1 `stride_frequency` / `deceleration` units are assumptions | Minor | Open (#29) |
+
+No validation numbers were fabricated in this pass.

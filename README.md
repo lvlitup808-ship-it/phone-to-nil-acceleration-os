@@ -54,7 +54,7 @@ Every route below exists in `services/api/app.py` or `services/api/film.py`; `te
 | `GET /passport/{athlete_id}` | 1 | `blocked_on_golden_set`, `assessments: []`; `consent` is the athlete's active scopes |
 | `POST /coach/annotate` | 1 | Append a coach note to an assessment |
 | `GET /roster/{team_id}` | 1 | In-memory roster stub |
-| `POST /pose/assess` | 2 | Six frozen cues for `release` / `break` on fixture poses, with `cue_status`, calibration mode, versions |
+| `POST /pose/assess` | 2 | Six frozen cues for `release` / `break` on fixture poses, with `cue_status`, calibration mode, versions; 404 / 403 for an unknown / revoked `consent_id` |
 | `POST /ingest/check` | film-first | Capture contract + filename check; reason codes in `docs/film_first/retake_templates.md` |
 | `POST /consent` | film-first | Grant consent scopes |
 | `POST /consent/{consent_id}/revoke` | film-first | Revoke, purge covered clips / pose debug / share links, signed receipt |

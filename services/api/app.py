@@ -152,6 +152,8 @@ def prescribe(assessment_id: str) -> dict[str, Any]:
     gate = gate_state()
     if gate["status"] != "open":
         return {"assessment_id": assessment_id, "primary_cue": None, "drills": [], "grounded": False, **gate}
+    if not row.get("cues"):
+        return {"assessment_id": assessment_id, "primary_cue": None, "drills": [], "grounded": False, "status": "open"}
     first = row["cues"][0]
     cue = first.get("id") or first.get("name")
     pack = EVIDENCE.run("drill prescription", cue)
@@ -179,7 +181,11 @@ def artifacts_dir_for(clip_id: str) -> Path:
 def _purge_for_consent(consent: dict[str, Any]) -> dict[str, int]:
     """Delete what a revoked consent covered: clips, pose debug files; blank assessments."""
     cid = consent["consent_id"]
-    clips = [k for k, v in STORE["clips"].items() if v.get("consent_id") == cid]
+    clips = [
+        k
+        for k, v in STORE["clips"].items()
+        if v.get("consent_id") == cid or (not v.get("consent_id") and v.get("athlete_id") == consent["athlete_id"])
+    ]
     for k in clips:
         del STORE["clips"][k]
     debug = 0
@@ -204,6 +210,13 @@ CONSENT.purgers.append(_purge_for_consent)
 def pose_assess(body: PoseAssessIn) -> dict[str, Any]:
     from services.cv_worker.pipeline_v2 import run_pose_assessment
 
+    if body.consent_id:
+        consent = CONSENT.consents.get(body.consent_id)
+        if consent is None:
+            raise HTTPException(404, "consent not found")
+        if consent.get("revoked"):
+            # Checked before the pipeline runs so no debug files are written for revoked consent.
+            raise HTTPException(403, "consent revoked")
     out = run_pose_assessment(
         movement=body.movement,
         clip_id=body.clip_id,

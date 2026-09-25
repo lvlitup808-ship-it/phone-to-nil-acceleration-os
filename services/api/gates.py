@@ -38,10 +38,13 @@ def _load_json(path: Path) -> dict[str, Any] | None:
         return None
 
 
-def _has_film(clip: dict[str, Any], root: Path) -> bool:
+def has_film(clip: dict[str, Any], root: Path) -> bool:
     for key in ("camera_side", "camera_45"):
         cam = clip.get(key) or {}
-        if cam.get("present") and cam.get("path") and (root / cam["path"]).is_file():
+        if not (cam.get("present") and cam.get("path")):
+            continue
+        path = (root / cam["path"]).resolve()
+        if path.is_relative_to(root.resolve()) and path.is_file():
             return True
     return False
 
@@ -49,7 +52,7 @@ def _has_film(clip: dict[str, Any], root: Path) -> bool:
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     manifest = _load_json(golden_dir / "manifest.json") or {}
     clips = {c["clip_id"]: c for c in manifest.get("clips", []) if "clip_id" in c}
-    filmed = {cid: c for cid, c in clips.items() if _has_film(c, golden_dir)}
+    filmed = {cid: c for cid, c in clips.items() if has_film(c, golden_dir)}
 
     coaches: dict[str, set[str]] = {}
     disputed: set[str] = set()
@@ -59,7 +62,7 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
             continue
         label = _load_json(path) or {}
         cid = str(label.get("clip_id", ""))
-        if cid not in filmed or label.get("excluded"):
+        if cid not in filmed or label.get("excluded") or not label.get("coach_id"):
             continue
         if label.get("disputed") or filmed[cid].get("disputed"):
             disputed.add(cid)

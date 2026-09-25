@@ -15,6 +15,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from services.api.gates import has_film
 from services.cv_worker.pipeline_v2 import run_pose_assessment
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -24,17 +25,17 @@ HONESTY_LINE = "Do not treat this as athlete validation."
 
 
 def real_mp4_present(manifest: dict[str, Any], root: Path = MANIFEST.parent) -> bool:
-    for clip in manifest.get("clips", []):
-        for key in ("camera_side", "camera_45"):
-            cam = clip.get(key) or {}
-            if cam.get("present") and (root / cam.get("path", "")).is_file():
-                return True
-    return False
+    return any(has_film(clip, root) for clip in manifest.get("clips", []))
 
 
 def build_report(manifest_path: Path = MANIFEST) -> str:
     manifest = json.loads(manifest_path.read_text())
     real = real_mp4_present(manifest, manifest_path.parent)
+    runs = []
+    for clip in manifest["clips"]:
+        movement = "release" if clip["movement"] == "release" else "break"
+        runs.append((clip, run_pose_assessment(movement=movement, clip_id=clip["clip_id"], height_cm=clip.get("athlete_height_cm"))))
+    sources = {out["pose_source"] for _, out in runs}
     lines = [
         "# Slice 2 validation report",
         "",
@@ -42,18 +43,16 @@ def build_report(manifest_path: Path = MANIFEST) -> str:
         "",
         f"golden_set: {manifest.get('golden_set')}",
         f"real_mp4_present: {str(real).lower()}",
-        "mode: fixture (synthetic poses, not athlete film)",
+        f"mode: {'fixture (synthetic poses, not athlete film)' if sources <= {'fixture'} else ', '.join(sorted(sources))}",
         "",
         HONESTY_LINE,
         "No athlete-film MAE is published. No coach labels exist yet, so there is nothing to compare against.",
         "",
     ]
-    for clip in manifest["clips"]:
-        movement = "release" if clip["movement"] == "release" else "break"
-        out = run_pose_assessment(movement=movement, clip_id=clip["clip_id"], height_cm=clip.get("athlete_height_cm"))
+    for clip, out in runs:
         lines.append(
             f"- {clip['clip_id']}: status={out['assessment_status']} cues={len(out['cues'])} "
-            f"pose_model={out['versions']['pose_model_version']} source=fixture"
+            f"pose_model={out['versions']['pose_model_version']} source={out['pose_source']}"
         )
     return "\n".join(lines) + "\n"
 
