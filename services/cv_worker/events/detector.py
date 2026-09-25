@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from services.cv_worker.pose.base import L_ANKLE, L_HIP, R_ANKLE, R_HIP, PoseSequence
+from services.cv_worker.pose.base import L_HIP, R_ANKLE, R_HIP, PoseSequence
 
 
 @dataclass

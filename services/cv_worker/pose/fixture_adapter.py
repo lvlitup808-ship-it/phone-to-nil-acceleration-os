@@ -5,9 +5,19 @@ from __future__ import annotations
 import numpy as np
 
 from services.cv_worker.pose.base import (
-    L_ANKLE, L_HIP, L_KNEE, L_SHOULDER, NOSE,
-    POSE_MODEL_VERSION_FIXTURE, R_ANKLE, R_HIP, R_KNEE, R_SHOULDER,
-    PoseSequence, smooth_sequence, timestamps_ms,
+    L_ANKLE,
+    L_HIP,
+    L_KNEE,
+    L_SHOULDER,
+    NOSE,
+    POSE_MODEL_VERSION_FIXTURE,
+    R_ANKLE,
+    R_HIP,
+    R_KNEE,
+    R_SHOULDER,
+    PoseSequence,
+    smooth_sequence,
+    timestamps_ms,
 )
 
 

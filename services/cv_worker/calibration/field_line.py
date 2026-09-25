@@ -33,7 +33,7 @@ def detect_field_line(frame: np.ndarray | None) -> Calibration | None:
             horiz.append((int(x1), int(y1), int(x2), int(y2)))
     if len(horiz) < 2:
         return None
-    ys = sorted(set(h[1] for h in horiz))
+    ys = sorted({h[1] for h in horiz})
     if len(ys) < 2:
         return None
     dy = abs(ys[-1] - ys[0])

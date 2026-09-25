@@ -1,0 +1,75 @@
+{
+  "$defs": {
+    "CueId": {
+      "enum": [
+        "shin_angle",
+        "hip_height",
+        "ground_contact_time",
+        "first_step_separation",
+        "asymmetry",
+        "stride_frequency",
+        "deceleration"
+      ],
+      "title": "CueId",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "confidence": {
+      "default": 0.5,
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "id": {
+      "$ref": "#/$defs/CueId"
+    },
+    "note": {
+      "title": "Note",
+      "type": "string"
+    },
+    "priority": {
+      "default": 1,
+      "title": "Priority",
+      "type": "integer"
+    },
+    "trainability": {
+      "default": 0.5,
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Trainability",
+      "type": "number"
+    },
+    "unit": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unit"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Value"
+    }
+  },
+  "required": [
+    "id",
+    "note"
+  ],
+  "title": "Cue",
+  "type": "object"
+}

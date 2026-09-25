@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import numpy as np
 
+from services.cv_worker.calibration.field_line import Calibration
 from services.cv_worker.confidence import apply_gate, joint_ok
+from services.cv_worker.events.detector import Event
 from services.cv_worker.features.common import angle_from_vertical, envelope, event_map, mid_hip
 from services.cv_worker.pose.base import L_ANKLE, L_HIP, NOSE, R_ANKLE, R_HIP, R_KNEE, PoseSequence
 
 
-def extract_db(seq: PoseSequence, events, calibration, clip_id: str) -> list[dict]:
+def extract_db(seq: PoseSequence, events: list[Event], calibration: Calibration, clip_id: str) -> list[dict]:
     em = event_map(events)
     kp = seq.keypoints
     mode = calibration.mode
@@ -39,9 +41,9 @@ def extract_db(seq: PoseSequence, events, calibration, clip_id: str) -> list[dic
     if br and br.frame > 2:
         hips = np.array([mid_hip(kp[i]) for i in range(max(0, br.frame - 3), br.frame + 1)])
         rate = float(np.linalg.norm(np.gradient(hips, axis=0)[-1]) * seq.fps)
-        cues.append(envelope("hip_rotation_rate", rate, "deg/s", 0.55, mode, [br.frame], clip_id, "ok"))
+        cues.append(envelope("hip_rotation_rate", rate, "px/s", 0.55, mode, [br.frame], clip_id, "ok"))
     else:
-        cues.append(envelope("hip_rotation_rate", None, "deg/s", 0.0, mode, [], clip_id, "insufficient_data"))
+        cues.append(envelope("hip_rotation_rate", None, "px/s", 0.0, mode, [], clip_id, "insufficient_data"))
     if br and pv:
         dt = abs(br.t_ms - pv.t_ms)
         cues.append(envelope("deceleration_time", float(dt), "ms", 0.6, mode, [pv.frame, br.frame], clip_id, "ok"))
@@ -50,13 +52,11 @@ def extract_db(seq: PoseSequence, events, calibration, clip_id: str) -> list[dic
     if br:
         sl = slice(max(0, br.frame - 4), br.frame + 4)
         yaw = kp[sl, NOSE, 0] - ((kp[sl, L_HIP, 0] + kp[sl, R_HIP, 0]) / 2)
-        cues.append(envelope("eye_discipline_proxy", float(np.var(yaw)), "deg^2", 0.45, mode, list(range(sl.start, sl.stop)), clip_id, "ok"))
+        cues.append(envelope("eye_discipline_proxy", float(np.var(yaw)), "px^2", 0.45, mode, list(range(sl.start, sl.stop)), clip_id, "ok"))
     else:
-        cues.append(envelope("eye_discipline_proxy", None, "deg^2", 0.0, mode, [], clip_id, "insufficient_data"))
+        cues.append(envelope("eye_discipline_proxy", None, "px^2", 0.0, mode, [], clip_id, "insufficient_data"))
     if br and fs and fs.t_ms >= br.t_ms:
         cues.append(envelope("recovery_first_step", float(fs.t_ms - br.t_ms), "ms", 0.6, mode, [br.frame, fs.frame], clip_id, "ok"))
-    elif br:
-        cues.append(envelope("recovery_first_step", 180.0, "ms", 0.4, mode, [br.frame], clip_id, "low_confidence"))
     else:
         cues.append(envelope("recovery_first_step", None, "ms", 0.0, mode, [], clip_id, "insufficient_data"))
     return cues

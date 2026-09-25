@@ -1,0 +1,274 @@
+{
+  "$defs": {
+    "AssessmentStatus": {
+      "enum": [
+        "ok",
+        "low_confidence",
+        "insufficient_data",
+        "uncalibrated",
+        "error",
+        "scope_revoked"
+      ],
+      "title": "AssessmentStatus",
+      "type": "string"
+    },
+    "CueStatus": {
+      "enum": [
+        "ok",
+        "low_confidence",
+        "uncalibrated",
+        "insufficient_data"
+      ],
+      "title": "CueStatus",
+      "type": "string"
+    },
+    "Slice2Cue": {
+      "properties": {
+        "actionable": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Actionable"
+        },
+        "calibration_mode": {
+          "title": "Calibration Mode",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "cue_status": {
+          "$ref": "#/$defs/CueStatus"
+        },
+        "evidence_frames": {
+          "default": [],
+          "items": {
+            "type": "integer"
+          },
+          "title": "Evidence Frames",
+          "type": "array"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "source_clip_id": {
+          "title": "Source Clip Id",
+          "type": "string"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "name",
+        "unit",
+        "confidence",
+        "calibration_mode",
+        "cue_status",
+        "source_clip_id"
+      ],
+      "title": "Slice2Cue",
+      "type": "object"
+    },
+    "Slice2Event": {
+      "properties": {
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "frame": {
+          "title": "Frame",
+          "type": "integer"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "t_ms": {
+          "title": "T Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "t_ms",
+        "confidence",
+        "frame"
+      ],
+      "title": "Slice2Event",
+      "type": "object"
+    }
+  },
+  "additionalProperties": true,
+  "description": "Payload of run_pose_assessment / POST /pose/assess. Extra keys are allowed (additive API).",
+  "properties": {
+    "artifacts": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Artifacts",
+      "type": "object"
+    },
+    "assessment_lineage": {
+      "additionalProperties": true,
+      "title": "Assessment Lineage",
+      "type": "object"
+    },
+    "assessment_status": {
+      "$ref": "#/$defs/AssessmentStatus"
+    },
+    "calibration_confidence": {
+      "title": "Calibration Confidence",
+      "type": "number"
+    },
+    "calibration_mode": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Calibration Mode"
+    },
+    "cues": {
+      "items": {
+        "$ref": "#/$defs/Slice2Cue"
+      },
+      "title": "Cues",
+      "type": "array"
+    },
+    "events": {
+      "items": {
+        "$ref": "#/$defs/Slice2Event"
+      },
+      "title": "Events",
+      "type": "array"
+    },
+    "fix_this_first": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Fix This First"
+    },
+    "golden_set": {
+      "title": "Golden Set",
+      "type": "string"
+    },
+    "minors_mode": {
+      "title": "Minors Mode",
+      "type": "boolean"
+    },
+    "movement": {
+      "enum": [
+        "release",
+        "break"
+      ],
+      "title": "Movement",
+      "type": "string"
+    },
+    "pose_source": {
+      "enum": [
+        "fixture",
+        "model",
+        "error"
+      ],
+      "title": "Pose Source",
+      "type": "string"
+    },
+    "retake_instruction": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Retake Instruction"
+    },
+    "synthetic_risk": {
+      "anyOf": [
+        {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Synthetic Risk"
+    },
+    "template": {
+      "enum": [
+        "wr_release",
+        "db_break"
+      ],
+      "title": "Template",
+      "type": "string"
+    },
+    "versions": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Versions",
+      "type": "object"
+    }
+  },
+  "required": [
+    "assessment_status",
+    "retake_instruction",
+    "movement",
+    "template",
+    "events",
+    "cues",
+    "fix_this_first",
+    "calibration_mode",
+    "calibration_confidence",
+    "synthetic_risk",
+    "minors_mode",
+    "versions",
+    "assessment_lineage",
+    "artifacts",
+    "golden_set",
+    "pose_source"
+  ],
+  "title": "Slice2Assessment",
+  "type": "object"
+}

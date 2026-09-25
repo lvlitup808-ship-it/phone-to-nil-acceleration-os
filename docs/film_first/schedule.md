@@ -5,7 +5,7 @@ Two sessions. One week apart.
 ## Session 1 — 3 WR + 3 DB
 
 - 6 athletes, 4 clips each (side + 45 × 2 movements or 2 angles × 2 positions as assigned), 24 clips filmed
-- Expect 6–8 to pass ingest after rejection
+- Expect 6–8 to pass ingest after rejection (planning guess, `unverified` — no ingest data exists yet)
 - Label within 48 hours
 
 ## Session 2 — 7 WR + 7 DB

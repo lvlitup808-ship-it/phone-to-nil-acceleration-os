@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
+import numpy as np
+
+from packages.shared.slice2 import AssessmentStatus, CueStatus
+
 JOINT_CONF_MIN = 0.4
 WR_DOWNGRADE_HEIGHT_PRIOR = {"shin_angle_at_contact", "hip_height_at_contact"}
 DB_DOWNGRADE_HEIGHT_PRIOR = {"pad_level_at_break", "foot_plant_angle"}
@@ -14,7 +18,7 @@ RETAKE = {
 }
 
 
-def joint_ok(kp_frame, idxs: list[int]) -> bool:
+def joint_ok(kp_frame: np.ndarray, idxs: list[int]) -> bool:
     return all(float(kp_frame[i, 2]) >= JOINT_CONF_MIN for i in idxs)
 
 
@@ -40,12 +44,14 @@ def apply_gate(cue: dict[str, Any], *, movement: str, calibration_mode: str | No
 
 def rollup(cues: list[dict[str, Any]], events: list) -> str:
     if not events:
-        return "insufficient_data"
-    if any(c["cue_status"] == "uncalibrated" for c in cues) and all(c["cue_status"] != "ok" for c in cues):
-        return "uncalibrated"
-    oks = [c for c in cues if c["cue_status"] == "ok"]
+        return AssessmentStatus.insufficient_data.value
+    if any(c["cue_status"] == CueStatus.uncalibrated for c in cues) and all(
+        c["cue_status"] != CueStatus.ok for c in cues
+    ):
+        return AssessmentStatus.uncalibrated.value
+    oks = [c for c in cues if c["cue_status"] == CueStatus.ok]
     if not oks:
-        return "insufficient_data"
+        return AssessmentStatus.insufficient_data.value
     if len(oks) < 3:
-        return "low_confidence"
-    return "ok"
+        return AssessmentStatus.low_confidence.value
+    return AssessmentStatus.ok.value

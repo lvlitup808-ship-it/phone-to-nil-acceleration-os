@@ -1,0 +1,99 @@
+{
+  "description": "Slice 1 shape. Numbers stay null until a sourced comp dataset exists.",
+  "properties": {
+    "assumptions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "athlete_id": {
+      "title": "Athlete Id",
+      "type": "string"
+    },
+    "comp_cluster_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Comp Cluster Ids",
+      "type": "array"
+    },
+    "confidence": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Confidence"
+    },
+    "counterfactuals": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "Counterfactuals",
+      "type": "object"
+    },
+    "currency": {
+      "default": "USD",
+      "title": "Currency",
+      "type": "string"
+    },
+    "disclaimer_version": {
+      "title": "Disclaimer Version",
+      "type": "string"
+    },
+    "p25": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "P25"
+    },
+    "p50": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "P50"
+    },
+    "p75": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "P75"
+    },
+    "status": {
+      "default": "schema_only",
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "athlete_id",
+    "assumptions",
+    "comp_cluster_ids",
+    "disclaimer_version"
+  ],
+  "title": "NILBand",
+  "type": "object"
+}

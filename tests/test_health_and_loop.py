@@ -43,9 +43,15 @@ def test_capture_assess_prescribe_nil():
     assert report.status_code == 200
     prep = client.get(f"/prescribe/{aid}")
     assert prep.status_code == 200
+    body = prep.json()
+    assert body["status"] == "blocked_on_golden_set"
+    assert body["drills"] == []
+    assert {"assessment_id", "primary_cue", "drills", "grounded"} <= body.keys()
     band = client.get("/nil-band/a1")
+    assert band.status_code == 200
     body = band.json()
-    assert body["p25"] <= body["p50"] <= body["p75"]
+    assert body["status"] == "blocked_on_golden_set"
+    assert body["p25"] is None and body["p50"] is None and body["p75"] is None
     assert body["disclaimer_version"]
     assert body["assumptions"]
 
@@ -56,7 +62,9 @@ def test_cv_stub():
     assert "first_step" in out["events"]
 
 
-def test_valuation_is_a_range():
+def test_valuation_emits_no_invented_numbers():
     band = estimate_band("a1")
-    assert band.p25 < band.p75
-    assert "synthetic" in " ".join(band.assumptions)
+    assert band.p25 is None and band.p50 is None and band.p75 is None
+    assert band.confidence is None
+    assert band.counterfactuals == {}
+    assert band.status == "schema_only"

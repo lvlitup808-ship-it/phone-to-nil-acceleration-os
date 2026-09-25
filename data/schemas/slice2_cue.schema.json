@@ -1,0 +1,84 @@
+{
+  "$defs": {
+    "CueStatus": {
+      "enum": [
+        "ok",
+        "low_confidence",
+        "uncalibrated",
+        "insufficient_data"
+      ],
+      "title": "CueStatus",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "actionable": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Actionable"
+    },
+    "calibration_mode": {
+      "title": "Calibration Mode",
+      "type": "string"
+    },
+    "confidence": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "cue_status": {
+      "$ref": "#/$defs/CueStatus"
+    },
+    "evidence_frames": {
+      "default": [],
+      "items": {
+        "type": "integer"
+      },
+      "title": "Evidence Frames",
+      "type": "array"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "source_clip_id": {
+      "title": "Source Clip Id",
+      "type": "string"
+    },
+    "unit": {
+      "title": "Unit",
+      "type": "string"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Value"
+    }
+  },
+  "required": [
+    "name",
+    "unit",
+    "confidence",
+    "calibration_mode",
+    "cue_status",
+    "source_clip_id"
+  ],
+  "title": "Slice2Cue",
+  "type": "object"
+}

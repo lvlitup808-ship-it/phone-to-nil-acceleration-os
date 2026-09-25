@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from packages.capture.contract import validate_ingest
 from packages.consent.store import ConsentStore
-from services.api.gates import blocked_reason, prescription_enabled
+from services.api.gates import gate_state
 from services.cv_worker.ingest.naming import validate_name
 
 router = APIRouter()
@@ -37,6 +37,18 @@ class ShareIn(BaseModel):
     ttl_days: int = 30
 
 
+def _purge_share_links(consent: dict[str, Any]) -> dict[str, int]:
+    n = 0
+    for row in SHARE.values():
+        if row["athlete_id"] == consent["athlete_id"] and not row["revoked"]:
+            row["revoked"] = True
+            n += 1
+    return {"passport_share": n}
+
+
+CONSENT.purgers.append(_purge_share_links)
+
+
 @router.post("/ingest/check")
 def ingest_check(body: IngestCheckIn) -> dict[str, Any]:
     if body.filename:
@@ -63,13 +75,13 @@ def revoke_consent(consent_id: str) -> dict[str, Any]:
     try:
         return CONSENT.revoke(consent_id, artifacts=["clips", "pose_debug", "passport_share"])
     except KeyError:
-        raise HTTPException(404, "consent not found")
+        raise HTTPException(404, "consent not found") from None
 
 
 @router.post("/share-link")
 def share_link(body: ShareIn) -> dict[str, Any]:
     ttl = min(max(body.ttl_days, 1), 30)
-    expires = datetime.now(timezone.utc) + timedelta(days=ttl)
+    expires = datetime.now(UTC) + timedelta(days=ttl)
     token = f"shr_{body.athlete_id}_{expires.strftime('%Y%m%d')}"
     SHARE[token] = {
         "token": token,
@@ -101,9 +113,7 @@ def assignments() -> dict[str, Any]:
 
 @router.get("/gates/golden")
 def golden_gate() -> dict[str, Any]:
-    if prescription_enabled():
-        return {"status": "open"}
-    return blocked_reason()
+    return gate_state()
 
 
 @router.get("/nil-band/{athlete_id}/scenarios")

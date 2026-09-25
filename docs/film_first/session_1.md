@@ -42,10 +42,13 @@ Log the take in the intake form before moving on. Athlete ID, position, movement
 Do this the same day. Not tomorrow.
 
 1. Ingest every clip. Run `/ingest/check` on all. Log rejects with reason.
-2. Open `pose_debug.mp4` on the first clean WR clip. Watch it yourself, twice. Does the skeleton track the athlete through the burst? Any joint flipping or lag?
-3. Open `calibration_debug.png` on the same clip. Is field_line mode hitting? Or did it fall to height_prior? If the field had visible lines and it still fell back, calibration detection has a bug. Fix before Session 2.
+2. Open the pose debug output for the first clean WR clip (`artifacts/<clip_id>/pose_debug.json` and `pose_confidence_heatmap.npy`; a rendered `pose_debug.mp4` does not exist yet — the pipeline only writes it once real frames flow). Check the per-joint confidence through the burst. Any joint flipping or lag?
+3. Open `artifacts/<clip_id>/calibration_debug.json` on the same clip (no `.png` is written today). Is field_line mode hitting? Or did it fall to height_prior? If the field had visible lines and it still fell back, calibration detection has a bug. Fix before Session 2.
 4. Check event markers. Do motion_start, first_step, release line up with what you see on the timeline? Off by more than 3 frames → event detector issue.
-5. Sanity-check the 6 WR cues. shin_angle_at_contact between 30 and 50 is plausible. hip_height_at_contact between 0.75 and 0.95 is plausible. Anything outside those ranges on a clean clip means the feature formula is wrong, not the model.
+5. Sanity-check the 6 WR cues against what you see on film. The ranges below are **unverified** rough guesses with no source; they are not targets and not validation.
+   - shin_angle_at_contact 30–50°: `unverified`. The code measures the tibia's angle from the image vertical; whether 30–50 applies to that convention is a coach call (see `docs/audit/open_questions.md`).
+   - hip_height_at_contact 0.75–0.95: `unverified`, and inconsistent with the formula. The code computes (ankle→hip) / (ankle→nose); a standing adult sits near 0.5. Do not flag a clip on this band.
+   A clearly wrong number on a clean clip still points at the feature formula before the model.
 6. Log it all in `docs/validation/session_1_report.md`. What passed, what failed, what needs a fix before Session 2.
 
 ## Decision tree after Session 1

@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import os
+import re
+import shutil
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
@@ -11,8 +15,10 @@ from packages.biomech.features import extract_cues
 from packages.capture.contract import validate_ingest
 from packages.evidence.pipeline import EvidencePipeline
 from packages.judgment.client import JudgmentClient
-from packages.shared.models import ClipQuality, NILBand, PositionTemplate
-from services.api.film import CONSENT, router as film_router
+from packages.shared.models import ClipQuality, PositionTemplate
+from services.api.film import CONSENT
+from services.api.film import router as film_router
+from services.api.gates import gate_state
 
 app = FastAPI(
     title="Phone-to-NIL Acceleration OS",
@@ -24,6 +30,7 @@ STORE: dict[str, dict[str, Any]] = {"clips": {}, "assessments": {}, "athletes": 
 JUDGE = JudgmentClient()
 EVIDENCE = EvidencePipeline(JUDGE)
 app.include_router(film_router)
+CLIP_ID_RE = re.compile(r"[A-Za-z0-9_-]{1,64}")
 
 
 class UploadIn(BaseModel):
@@ -120,7 +127,7 @@ def assess(body: AssessIn) -> dict[str, Any]:
         "template": body.template.value,
         "cues": [c.model_dump() for c in cues],
         "evidence": evidence,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
     }
     STORE["assessments"][assessment_id] = row
     return row
@@ -142,25 +149,81 @@ def prescribe(assessment_id: str) -> dict[str, Any]:
     row = CONSENT.cascade(row)
     if row.get("assessment_status") == "scope_revoked":
         raise HTTPException(403, "consent revoked")
+    gate = gate_state()
+    if gate["status"] != "open":
+        return {"assessment_id": assessment_id, "primary_cue": None, "drills": [], "grounded": False, **gate}
+    if not row.get("cues"):
+        return {"assessment_id": assessment_id, "primary_cue": None, "drills": [], "grounded": False, "status": "open"}
     first = row["cues"][0]
     cue = first.get("id") or first.get("name")
     pack = EVIDENCE.run("drill prescription", cue)
     reviewed = [d for d in pack["drills"] if d.get("coach_reviewed") is not False]
-    return {"assessment_id": assessment_id, "primary_cue": cue, "drills": reviewed, "grounded": pack["grounded"]}
+    return {
+        "assessment_id": assessment_id,
+        "primary_cue": cue,
+        "drills": reviewed,
+        "grounded": pack["grounded"],
+        "status": "open",
+    }
+
+
+def artifacts_dir_for(clip_id: str) -> Path:
+    """Debug-artifact folder for a clip. Refuses ids that could escape ARTIFACTS_DIR."""
+    if not CLIP_ID_RE.fullmatch(clip_id):
+        raise HTTPException(422, "clip_id must match [A-Za-z0-9_-]{1,64}")
+    root = Path(os.getenv("ARTIFACTS_DIR", "artifacts")).resolve()
+    folder = (root / clip_id).resolve()
+    if folder.parent != root:
+        raise HTTPException(422, "clip_id resolves outside the artifacts directory")
+    return folder
+
+
+def _purge_for_consent(consent: dict[str, Any]) -> dict[str, int]:
+    """Delete what a revoked consent covered: clips, pose debug files; blank assessments."""
+    cid = consent["consent_id"]
+    clips = [
+        k
+        for k, v in STORE["clips"].items()
+        if v.get("consent_id") == cid or (not v.get("consent_id") and v.get("athlete_id") == consent["athlete_id"])
+    ]
+    for k in clips:
+        del STORE["clips"][k]
+    debug = 0
+    for row in STORE["assessments"].values():
+        if row.get("consent_id") != cid:
+            continue
+        CONSENT.cascade(row)
+        for clip_id in (row.get("assessment_lineage") or {}).get("clip_ids", []):
+            if CLIP_ID_RE.fullmatch(clip_id):
+                folder = artifacts_dir_for(clip_id)
+                if folder.is_dir():
+                    shutil.rmtree(folder)
+                    debug += 1
+        row["artifacts"] = {}
+    return {"clips": len(clips), "pose_debug": debug}
+
+
+CONSENT.purgers.append(_purge_for_consent)
 
 
 @app.post("/pose/assess")
 def pose_assess(body: PoseAssessIn) -> dict[str, Any]:
-    from pathlib import Path
     from services.cv_worker.pipeline_v2 import run_pose_assessment
 
+    if body.consent_id:
+        consent = CONSENT.consents.get(body.consent_id)
+        if consent is None:
+            raise HTTPException(404, "consent not found")
+        if consent.get("revoked"):
+            # Checked before the pipeline runs so no debug files are written for revoked consent.
+            raise HTTPException(403, "consent revoked")
     out = run_pose_assessment(
         movement=body.movement,
         clip_id=body.clip_id,
         side_clip=body.side_clip,
         height_cm=body.height_cm,
         athlete_id=body.athlete_id,
-        artifacts_dir=Path("artifacts") / body.clip_id,
+        artifacts_dir=artifacts_dir_for(body.clip_id),
         judge=JUDGE,
     )
     out["minors_mode"] = body.minors_mode
@@ -188,14 +251,23 @@ def retest(body: RetestIn) -> dict[str, Any]:
 @app.get("/nil-band/{athlete_id}")
 def nil_band(athlete_id: str) -> dict[str, Any]:
     from services.valuation.engine import estimate_band
-    return estimate_band(athlete_id).model_dump()
+
+    band = estimate_band(athlete_id).model_dump()
+    gate = gate_state()
+    if gate["status"] != "open":
+        band.update(gate)
+    return band
 
 
 @app.get("/passport/{athlete_id}")
 def passport(athlete_id: str) -> dict[str, Any]:
+    consent = CONSENT.active_scopes(athlete_id)
+    gate = gate_state()
+    if gate["status"] != "open":
+        return {"athlete_id": athlete_id, "assessments": [], "consent": consent, **gate}
     assessments = [CONSENT.cascade(dict(a)) for a in STORE["assessments"].values() if a["athlete_id"] == athlete_id]
     assessments = [a for a in assessments if a.get("assessment_status") != "scope_revoked"]
-    return {"athlete_id": athlete_id, "assessments": assessments, "consent": {"capture": True, "coach": True, "public": False}}
+    return {"athlete_id": athlete_id, "assessments": assessments, "consent": consent, "status": "open"}
 
 
 @app.post("/coach/annotate")

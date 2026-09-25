@@ -2,9 +2,23 @@ from __future__ import annotations
 
 import numpy as np
 
+from services.cv_worker.calibration.field_line import Calibration
 from services.cv_worker.confidence import apply_gate, joint_ok
+from services.cv_worker.events.detector import Event
 from services.cv_worker.features.common import angle_from_vertical, envelope, event_map, mid_hip
-from services.cv_worker.pose.base import L_ANKLE, L_HIP, L_SHOULDER, NOSE, R_ANKLE, R_HIP, R_KNEE, R_SHOULDER, PoseSequence
+from services.cv_worker.pose.base import (
+    L_ANKLE,
+    L_HIP,
+    L_SHOULDER,
+    NOSE,
+    R_ANKLE,
+    R_HIP,
+    R_KNEE,
+    R_SHOULDER,
+    PoseSequence,
+)
+
+GCT_MIN_MS = 90.0  # unsourced plausibility floor; see docs/audit/open_questions.md #5
 
 WR_CUES = [
     "first_step_separation", "shin_angle_at_contact", "hip_height_at_contact",
@@ -12,7 +26,9 @@ WR_CUES = [
 ]
 
 
-def extract_wr(seq: PoseSequence, events, calibration, clip_id: str, side_clip: bool) -> list[dict]:
+def extract_wr(
+    seq: PoseSequence, events: list[Event], calibration: Calibration, clip_id: str, side_clip: bool
+) -> list[dict]:
     em = event_map(events)
     kp = seq.keypoints
     mode = calibration.mode
@@ -57,12 +73,12 @@ def extract_wr(seq: PoseSequence, events, calibration, clip_id: str, side_clip: 
     else:
         cues.append(envelope("hip_height_at_contact", None, "ratio", 0.0, mode, [], clip_id, "insufficient_data"))
 
-    if fs:
-        gct = 170.0
-        if "second_step" in em:
-            gct = max(90.0, float(em["second_step"].t_ms - fs.t_ms) * 0.45)
-        cues.append(envelope("ground_contact_time_first_step", gct, "ms", 0.6, mode, [fs.frame], clip_id, "ok"))
+    gct = float(em["second_step"].t_ms - fs.t_ms) * 0.45 if fs and "second_step" in em else None
+    if fs and gct is not None and gct >= GCT_MIN_MS:
+        ss = em["second_step"]
+        cues.append(envelope("ground_contact_time_first_step", gct, "ms", 0.6, mode, [fs.frame, ss.frame], clip_id, "ok"))
     else:
+        # Below the plausibility floor is reported as missing, not clamped to the floor.
         cues.append(envelope("ground_contact_time_first_step", None, "ms", 0.0, mode, [], clip_id, "insufficient_data"))
 
     if rel:

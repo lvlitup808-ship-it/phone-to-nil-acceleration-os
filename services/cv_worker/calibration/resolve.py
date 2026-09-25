@@ -7,7 +7,12 @@ from services.cv_worker.calibration.height_prior import height_prior
 from services.cv_worker.calibration.imu_fused import fuse_imu
 
 
-def resolve_calibration(frame, keypoints, height_cm, imu_tilt_deg=None) -> Calibration:
+def resolve_calibration(
+    frame: np.ndarray | None,
+    keypoints: np.ndarray,
+    height_cm: float | None,
+    imu_tilt_deg: float | None = None,
+) -> Calibration:
     a = detect_field_line(frame)
     if a is not None:
         return fuse_imu(a, imu_tilt_deg) or a

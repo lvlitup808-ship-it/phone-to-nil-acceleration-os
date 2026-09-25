@@ -9,6 +9,16 @@ TEMPLATES = {
     PositionTemplate.ol_first_step: [CueId.shin_angle, CueId.hip_height, CueId.ground_contact_time],
 }
 
+UNITS = {
+    CueId.shin_angle: "deg",
+    CueId.hip_height: "ratio",
+    CueId.ground_contact_time: "ms",
+    CueId.first_step_separation: "yd",
+    CueId.asymmetry: "ratio",
+    CueId.stride_frequency: "Hz",
+    CueId.deceleration: "ms",
+}
+
 NOTES = {
     CueId.shin_angle: "Shin too vertical off the line. Push the track angle on step one.",
     CueId.hip_height: "Hips rise early. Stay in the acceleration posture one extra step.",
@@ -29,7 +39,7 @@ def extract_cues(template: PositionTemplate, metrics: dict[str, float] | None = 
             Cue(
                 id=cue_id,
                 value=metrics.get(cue_id.value),
-                unit="deg" if "angle" in cue_id.value or "height" in cue_id.value else "ms",
+                unit=UNITS[cue_id],
                 confidence=0.62 if cue_id.value in metrics else 0.45,
                 priority=i,
                 trainability=0.8 if cue_id != CueId.asymmetry else 0.5,

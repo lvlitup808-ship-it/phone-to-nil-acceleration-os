@@ -1,0 +1,40 @@
+{
+  "properties": {
+    "reasons": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "retake_instructions": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Retake Instructions"
+    },
+    "score": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Score",
+      "type": "number"
+    },
+    "usable": {
+      "title": "Usable",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "score",
+    "usable"
+  ],
+  "title": "ClipQuality",
+  "type": "object"
+}
