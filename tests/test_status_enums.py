@@ -1,7 +1,7 @@
 import numpy as np
 
 from packages.consent.store import ConsentStore
-from packages.shared.slice2 import AssessmentStatus, CueStatus
+from packages.shared.slice2 import AssessmentStatus, CueStatus, Slice2Assessment
 from services.cv_worker.confidence import RETAKE
 from services.cv_worker.pipeline_v2 import run_pose_assessment
 
@@ -45,3 +45,4 @@ def test_adapter_failure_on_real_frames_is_error_not_synthetic(monkeypatch):
     assert out["cues"] == [] and out["events"] == []
     assert out["pose_source"] == "error"
     assert "RTMPose" in out["pose_error"]
+    Slice2Assessment.model_validate(out)

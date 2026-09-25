@@ -1,3 +1,12 @@
+-- NOT WIRED: no code loads this file; the API uses in-memory stores.
+-- Known drift from the API payloads (see docs/audit/open_questions.md):
+--   consents: API emits consent_id, consent_scope (list), revoked, revoked_at,
+--             parent_attested, granted_at; this table has scope TEXT, granted, version.
+--   assessments: Slice 2 adds assessment_status, events, calibration_mode, versions,
+--             assessment_lineage, consent_id, pose_source; not represented here.
+--   clips: API also stores fps, duration_s, consent_id.
+-- JSON Schemas generated from the pydantic models live next to this file (*.schema.json).
+
 CREATE TABLE IF NOT EXISTS athletes (
   id TEXT PRIMARY KEY,
   display_name TEXT NOT NULL,
