@@ -15,7 +15,7 @@ Resolved versions that matter: fastapi 0.141.1, starlette 1.7.0, pydantic 2.13.5
 
 | Test | Result | Cause |
 | --- | --- | --- |
-| `tests/lint/test_no_score_word.py::test_no_composite_score_identifier` | FAIL | The lint scans every `.py`/`.md`/`.ts(x)` file, including itself (its own `FORBIDDEN` tuple) and `tests/golden/test_pose_pipeline.py` (which asserts the banned key is *absent*). Five self-hits, zero hits in product code. |
+| `tests/lint/test_no_score_word.py` (the single lint test; its function name itself contained a banned token) | FAIL | The lint scans every `.py`/`.md`/`.ts(x)` file, including itself (its own `FORBIDDEN` tuple) and `tests/golden/test_pose_pipeline.py` (which asserts the banned key is *absent*). Five self-hits, zero hits in product code. |
 | all others (22) | pass | |
 
 Side effects of a test run (tree is dirty afterwards):

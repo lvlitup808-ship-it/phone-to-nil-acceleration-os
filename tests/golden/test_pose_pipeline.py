@@ -40,7 +40,7 @@ def test_pose_api_additive():
     assert res.status_code == 200
     body = res.json()
     assert "assessment_status" in body
-    assert "overall_score" not in body
+    assert not [k for k in body if k.endswith("_score")]
 
 
 def test_golden_harness_writes_pending_report():
