@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 
 from packages.capture.contract import validate_ingest
 from packages.consent.store import ConsentStore
+from services.api.gates import blocked_reason, prescription_enabled
+from services.cv_worker.ingest.naming import validate_name
 
 router = APIRouter()
 CONSENT = ConsentStore()
@@ -20,6 +22,7 @@ class IngestCheckIn(BaseModel):
     angles: list[str]
     stable_first_500ms: bool = True
     pair_complete: bool | None = None
+    filename: str | None = None
 
 
 class ConsentGrantIn(BaseModel):
@@ -36,6 +39,10 @@ class ShareIn(BaseModel):
 
 @router.post("/ingest/check")
 def ingest_check(body: IngestCheckIn) -> dict[str, Any]:
+    if body.filename:
+        ok, msg = validate_name(body.filename)
+        if not ok:
+            return {"accepted": False, "reasons": ["bad_filename"], "retake_instruction": msg}
     d = validate_ingest(
         fps=body.fps,
         duration_s=body.duration_s,
@@ -90,6 +97,13 @@ def assignments() -> dict[str, Any]:
 
     path = Path(__file__).resolve().parents[2] / "data/golden_set/assignments.json"
     return json.loads(path.read_text())
+
+
+@router.get("/gates/golden")
+def golden_gate() -> dict[str, Any]:
+    if prescription_enabled():
+        return {"status": "open"}
+    return blocked_reason()
 
 
 @router.get("/nil-band/{athlete_id}/scenarios")
