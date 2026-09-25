@@ -54,3 +54,6 @@ mlruns/
 infra/terraform/.terraform/
 *.tfstate
 *.tfstate.*
+
+# Runtime debug artifacts written by /pose/assess
+artifacts/

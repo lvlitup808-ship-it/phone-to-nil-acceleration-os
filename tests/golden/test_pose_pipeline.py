@@ -60,3 +60,15 @@ def test_golden_harness_writes_pending_report():
     REPORT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.write_text("\n".join(lines) + "\n")
     assert "pending" in REPORT.read_text()
+
+
+def test_pose_api_rejects_path_traversal(tmp_path):
+    from fastapi.testclient import TestClient
+
+    from services.api.app import app
+
+    c = TestClient(app)
+    for bad in ("../../tmp/x", "a/b", "..", "clp 1"):
+        res = c.post("/pose/assess", json={"athlete_id": "a1", "clip_id": bad, "movement": "release"})
+        assert res.status_code == 422, bad
+    assert not (tmp_path.parent / "tmp").exists()

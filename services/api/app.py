@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import os
+import re
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
@@ -24,6 +27,7 @@ STORE: dict[str, dict[str, Any]] = {"clips": {}, "assessments": {}, "athletes": 
 JUDGE = JudgmentClient()
 EVIDENCE = EvidencePipeline(JUDGE)
 app.include_router(film_router)
+CLIP_ID_RE = re.compile(r"[A-Za-z0-9_-]{1,64}")
 
 
 class UploadIn(BaseModel):
@@ -149,9 +153,19 @@ def prescribe(assessment_id: str) -> dict[str, Any]:
     return {"assessment_id": assessment_id, "primary_cue": cue, "drills": reviewed, "grounded": pack["grounded"]}
 
 
+def artifacts_dir_for(clip_id: str) -> Path:
+    """Debug-artifact folder for a clip. Refuses ids that could escape ARTIFACTS_DIR."""
+    if not CLIP_ID_RE.fullmatch(clip_id):
+        raise HTTPException(422, "clip_id must match [A-Za-z0-9_-]{1,64}")
+    root = Path(os.getenv("ARTIFACTS_DIR", "artifacts")).resolve()
+    folder = (root / clip_id).resolve()
+    if folder.parent != root:
+        raise HTTPException(422, "clip_id resolves outside the artifacts directory")
+    return folder
+
+
 @app.post("/pose/assess")
 def pose_assess(body: PoseAssessIn) -> dict[str, Any]:
-    from pathlib import Path
     from services.cv_worker.pipeline_v2 import run_pose_assessment
 
     out = run_pose_assessment(
@@ -160,7 +174,7 @@ def pose_assess(body: PoseAssessIn) -> dict[str, Any]:
         side_clip=body.side_clip,
         height_cm=body.height_cm,
         athlete_id=body.athlete_id,
-        artifacts_dir=Path("artifacts") / body.clip_id,
+        artifacts_dir=artifacts_dir_for(body.clip_id),
         judge=JUDGE,
     )
     out["minors_mode"] = body.minors_mode
