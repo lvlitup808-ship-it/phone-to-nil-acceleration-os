@@ -1,0 +1,11 @@
+name: Legal
+description: Privacy, consent, NIL disclaimer, bias audit
+labels: [legal]
+body:
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Topic
+      options: [privacy, consent, COPPA, FERPA, NIL-disclaimer, bias-audit, deepfake]
+    validations:
+      required: true

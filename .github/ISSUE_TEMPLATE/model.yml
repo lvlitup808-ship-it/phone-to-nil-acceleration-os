@@ -1,0 +1,10 @@
+name: Model
+description: Pose, biomech, judgment, or valuation model change
+labels: [ml, cv]
+body:
+  - type: textarea
+    id: metrics
+    attributes:
+      label: Validation metrics
+    validations:
+      required: true
