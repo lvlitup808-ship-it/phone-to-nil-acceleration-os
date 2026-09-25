@@ -8,19 +8,22 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from packages.biomech.features import extract_cues
+from packages.capture.contract import validate_ingest
 from packages.evidence.pipeline import EvidencePipeline
 from packages.judgment.client import JudgmentClient
 from packages.shared.models import ClipQuality, NILBand, PositionTemplate
+from services.api.film import CONSENT, router as film_router
 
 app = FastAPI(
     title="Phone-to-NIL Acceleration OS",
-    version="0.2.0",
+    version="0.2.1",
     description="Capture → Assess → Prescribe → Re-test → Value",
 )
 
 STORE: dict[str, dict[str, Any]] = {"clips": {}, "assessments": {}, "athletes": {}, "teams": {}}
 JUDGE = JudgmentClient()
 EVIDENCE = EvidencePipeline(JUDGE)
+app.include_router(film_router)
 
 
 class UploadIn(BaseModel):
@@ -29,6 +32,10 @@ class UploadIn(BaseModel):
     quality_score: float = 0.8
     blur: float = 0.1
     uri: str
+    fps: float = 60
+    duration_s: float = 8
+    stable_first_500ms: bool = True
+    consent_id: str | None = None
 
 
 class AssessIn(BaseModel):
@@ -58,6 +65,7 @@ class PoseAssessIn(BaseModel):
     side_clip: bool = True
     height_cm: float | None = 185.0
     minors_mode: bool = False
+    consent_id: str | None = None
 
 
 @app.get("/health")
@@ -67,6 +75,15 @@ def health() -> dict[str, str]:
 
 @app.post("/upload")
 def upload(body: UploadIn) -> dict[str, Any]:
+    contract = validate_ingest(
+        fps=body.fps,
+        duration_s=body.duration_s,
+        angles=[body.angle],
+        stable_first_500ms=body.stable_first_500ms,
+        pair_complete=True,
+    )
+    if not contract.accepted:
+        raise HTTPException(status_code=422, detail={"reasons": contract.reasons, "retake_instruction": contract.retake_instruction})
     decisions = JUDGE.decide(
         {"quality_score": body.quality_score, "blur": body.blur, "angle": body.angle},
         {
@@ -80,7 +97,7 @@ def upload(body: UploadIn) -> dict[str, Any]:
         score=body.quality_score,
         usable=usable and not synthetic,
         reasons=[] if usable else ["low quality or suspected synthetic"],
-        retake_instructions=None if usable else "Retake side-on, 5-10s, phone stable, full body in frame, 60fps if possible.",
+        retake_instructions=None if usable else "Retake side-on, 5-10s, phone stable, full body in frame.",
     )
     clip_id = str(uuid.uuid4())
     STORE["clips"][clip_id] = {**body.model_dump(), "id": clip_id, "quality": quality.model_dump()}
@@ -114,7 +131,7 @@ def report(assessment_id: str) -> dict[str, Any]:
     row = STORE["assessments"].get(assessment_id)
     if not row:
         raise HTTPException(404, "assessment not found")
-    return row
+    return CONSENT.cascade(row)
 
 
 @app.get("/prescribe/{assessment_id}")
@@ -122,6 +139,9 @@ def prescribe(assessment_id: str) -> dict[str, Any]:
     row = STORE["assessments"].get(assessment_id)
     if not row:
         raise HTTPException(404, "assessment not found")
+    row = CONSENT.cascade(row)
+    if row.get("assessment_status") == "scope_revoked":
+        raise HTTPException(403, "consent revoked")
     first = row["cues"][0]
     cue = first.get("id") or first.get("name")
     pack = EVIDENCE.run("drill prescription", cue)
@@ -132,7 +152,6 @@ def prescribe(assessment_id: str) -> dict[str, Any]:
 @app.post("/pose/assess")
 def pose_assess(body: PoseAssessIn) -> dict[str, Any]:
     from pathlib import Path
-
     from services.cv_worker.pipeline_v2 import run_pose_assessment
 
     out = run_pose_assessment(
@@ -147,10 +166,13 @@ def pose_assess(body: PoseAssessIn) -> dict[str, Any]:
     out["minors_mode"] = body.minors_mode
     out["id"] = str(uuid.uuid4())
     out["athlete_id"] = body.athlete_id
+    out["labeling_protocol_version"] = "1.0.0"
+    if body.consent_id:
+        CONSENT.attach(out, body.consent_id)
     if out.get("synthetic_risk") == "high":
         out["nil_band_blocked"] = True
     STORE["assessments"][out["id"]] = out
-    return out
+    return CONSENT.cascade(out)
 
 
 @app.post("/retest")
@@ -166,21 +188,14 @@ def retest(body: RetestIn) -> dict[str, Any]:
 @app.get("/nil-band/{athlete_id}")
 def nil_band(athlete_id: str) -> dict[str, Any]:
     from services.valuation.engine import estimate_band
-
-    band: NILBand = estimate_band(athlete_id)
-    return band.model_dump()
+    return estimate_band(athlete_id).model_dump()
 
 
 @app.get("/passport/{athlete_id}")
 def passport(athlete_id: str) -> dict[str, Any]:
-    assessments = [a for a in STORE["assessments"].values() if a["athlete_id"] == athlete_id]
-    return {
-        "athlete_id": athlete_id,
-        "assessments": assessments,
-        "consent": {"capture": True, "coach": True, "public": False},
-        "tamper_resistant": False,
-        "note": "v1 passport is a signed-intent stub. Hash chain lands in verified mode.",
-    }
+    assessments = [CONSENT.cascade(dict(a)) for a in STORE["assessments"].values() if a["athlete_id"] == athlete_id]
+    assessments = [a for a in assessments if a.get("assessment_status") != "scope_revoked"]
+    return {"athlete_id": athlete_id, "assessments": assessments, "consent": {"capture": True, "coach": True, "public": False}}
 
 
 @app.post("/coach/annotate")
@@ -195,5 +210,4 @@ def annotate(body: AnnotateIn) -> dict[str, Any]:
 
 @app.get("/roster/{team_id}")
 def roster(team_id: str) -> dict[str, Any]:
-    athletes = STORE["teams"].setdefault(team_id, {"id": team_id, "athletes": []})
-    return athletes
+    return STORE["teams"].setdefault(team_id, {"id": team_id, "athletes": []})
