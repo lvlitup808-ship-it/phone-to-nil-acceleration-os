@@ -33,3 +33,21 @@ def test_recovery_step_is_not_invented_when_order_is_wrong():
     cue = {c["name"]: c for c in extract_db(seq, events, CAL, "c")}["recovery_first_step"]
     assert cue["value"] is None
     assert cue["cue_status"] == "insufficient_data"
+
+
+def test_units_match_what_is_computed():
+    seq = FixturePoseAdapter().infer(None)
+    events = [Event("first_step", 900, 0.75, 54), Event("peak_velocity", 700, 0.7, 42), Event("break", 860, 0.65, 52)]
+    units = {c["name"]: c["unit"] for c in extract_db(seq, events, CAL, "c")}
+    assert units["hip_rotation_rate"] == "px/s"
+    assert units["eye_discipline_proxy"] == "px^2"
+
+
+def test_slice1_units():
+    from packages.biomech.features import UNITS, extract_cues
+    from packages.shared.models import CueId, PositionTemplate
+
+    assert set(UNITS) == set(CueId)
+    units = {c.id: c.unit for c in extract_cues(PositionTemplate.wr_release)}
+    assert units[CueId.hip_height] == "ratio"
+    assert units[CueId.first_step_separation] == "yd"

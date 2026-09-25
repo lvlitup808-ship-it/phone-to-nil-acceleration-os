@@ -39,9 +39,9 @@ def extract_db(seq: PoseSequence, events, calibration, clip_id: str) -> list[dic
     if br and br.frame > 2:
         hips = np.array([mid_hip(kp[i]) for i in range(max(0, br.frame - 3), br.frame + 1)])
         rate = float(np.linalg.norm(np.gradient(hips, axis=0)[-1]) * seq.fps)
-        cues.append(envelope("hip_rotation_rate", rate, "deg/s", 0.55, mode, [br.frame], clip_id, "ok"))
+        cues.append(envelope("hip_rotation_rate", rate, "px/s", 0.55, mode, [br.frame], clip_id, "ok"))
     else:
-        cues.append(envelope("hip_rotation_rate", None, "deg/s", 0.0, mode, [], clip_id, "insufficient_data"))
+        cues.append(envelope("hip_rotation_rate", None, "px/s", 0.0, mode, [], clip_id, "insufficient_data"))
     if br and pv:
         dt = abs(br.t_ms - pv.t_ms)
         cues.append(envelope("deceleration_time", float(dt), "ms", 0.6, mode, [pv.frame, br.frame], clip_id, "ok"))
@@ -50,9 +50,9 @@ def extract_db(seq: PoseSequence, events, calibration, clip_id: str) -> list[dic
     if br:
         sl = slice(max(0, br.frame - 4), br.frame + 4)
         yaw = kp[sl, NOSE, 0] - ((kp[sl, L_HIP, 0] + kp[sl, R_HIP, 0]) / 2)
-        cues.append(envelope("eye_discipline_proxy", float(np.var(yaw)), "deg^2", 0.45, mode, list(range(sl.start, sl.stop)), clip_id, "ok"))
+        cues.append(envelope("eye_discipline_proxy", float(np.var(yaw)), "px^2", 0.45, mode, list(range(sl.start, sl.stop)), clip_id, "ok"))
     else:
-        cues.append(envelope("eye_discipline_proxy", None, "deg^2", 0.0, mode, [], clip_id, "insufficient_data"))
+        cues.append(envelope("eye_discipline_proxy", None, "px^2", 0.0, mode, [], clip_id, "insufficient_data"))
     if br and fs and fs.t_ms >= br.t_ms:
         cues.append(envelope("recovery_first_step", float(fs.t_ms - br.t_ms), "ms", 0.6, mode, [br.frame, fs.frame], clip_id, "ok"))
     else:
