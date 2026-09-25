@@ -1,8 +1,30 @@
 {
-  "protocol": "1.0.0",
-  "coverage_target": { "wr_release": 10, "db_break": 10 },
+  "schema_version": "1.0.0",
+  "dashboard": {
+    "wr_labeled": "0/10",
+    "db_labeled": "0/10",
+    "inter_rater": "pending"
+  },
   "assignments": [
-    {"clip_id": "clp_0001", "coach_id": "coach_001", "due_at": "2026-10-02T23:59:00Z", "status": "unlabeled", "labeling_protocol_version": "1.0.0"},
-    {"clip_id": "clp_0002", "coach_id": "coach_001", "due_at": "2026-10-02T23:59:00Z", "status": "unlabeled", "labeling_protocol_version": "1.0.0"}
+    {
+      "athlete_id": "ath_0001",
+      "position_target": "WR",
+      "movement": "release",
+      "assigned_to": "coach_001",
+      "due_date": "2026-10-02",
+      "consent_id": "cns_0001",
+      "status": "unfilmed",
+      "notes": ""
+    },
+    {
+      "athlete_id": "ath_0002",
+      "position_target": "DB",
+      "movement": "break",
+      "assigned_to": "coach_001",
+      "due_date": "2026-10-02",
+      "consent_id": "cns_0002",
+      "status": "unfilmed",
+      "notes": ""
+    }
   ]
 }

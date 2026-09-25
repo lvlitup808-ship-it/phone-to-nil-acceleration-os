@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "coach_session": {
+    "coach_id": "coach_001",
+    "started_at": "2026-09-25T14:00:00Z",
+    "ended_at": "2026-09-25T14:42:00Z",
+    "clips_labeled": 6,
+    "clips_disputed": 1,
+    "disagreement_rate": 0.17,
+    "fatigue_flag": false,
+    "notes": "Clean session, all clips turf, daylight."
+  }
+}
