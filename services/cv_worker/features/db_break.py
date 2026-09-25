@@ -55,8 +55,6 @@ def extract_db(seq: PoseSequence, events, calibration, clip_id: str) -> list[dic
         cues.append(envelope("eye_discipline_proxy", None, "deg^2", 0.0, mode, [], clip_id, "insufficient_data"))
     if br and fs and fs.t_ms >= br.t_ms:
         cues.append(envelope("recovery_first_step", float(fs.t_ms - br.t_ms), "ms", 0.6, mode, [br.frame, fs.frame], clip_id, "ok"))
-    elif br:
-        cues.append(envelope("recovery_first_step", 180.0, "ms", 0.4, mode, [br.frame], clip_id, "low_confidence"))
     else:
         cues.append(envelope("recovery_first_step", None, "ms", 0.0, mode, [], clip_id, "insufficient_data"))
     return cues

@@ -57,11 +57,10 @@ def extract_wr(seq: PoseSequence, events, calibration, clip_id: str, side_clip: 
     else:
         cues.append(envelope("hip_height_at_contact", None, "ratio", 0.0, mode, [], clip_id, "insufficient_data"))
 
-    if fs:
-        gct = 170.0
-        if "second_step" in em:
-            gct = max(90.0, float(em["second_step"].t_ms - fs.t_ms) * 0.45)
-        cues.append(envelope("ground_contact_time_first_step", gct, "ms", 0.6, mode, [fs.frame], clip_id, "ok"))
+    if fs and "second_step" in em:
+        ss = em["second_step"]
+        gct = max(90.0, float(ss.t_ms - fs.t_ms) * 0.45)
+        cues.append(envelope("ground_contact_time_first_step", gct, "ms", 0.6, mode, [fs.frame, ss.frame], clip_id, "ok"))
     else:
         cues.append(envelope("ground_contact_time_first_step", None, "ms", 0.0, mode, [], clip_id, "insufficient_data"))
 

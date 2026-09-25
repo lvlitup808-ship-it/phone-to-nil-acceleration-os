@@ -29,4 +29,9 @@ def event_map(events):
 
 
 def angle_from_vertical(dx: float, dy: float) -> float:
-    return float(np.degrees(np.arctan2(dx, max(dy, 1e-6))))
+    """Signed angle (deg) between segment (dx, dy) and the image vertical.
+
+    Image y grows downward, so a segment pointing up has dy < 0. The angle is
+    measured against the vertical axis regardless of up/down, signed by dx.
+    """
+    return float(np.degrees(np.arctan2(dx, max(abs(dy), 1e-6))))
