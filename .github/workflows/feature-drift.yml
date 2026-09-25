@@ -1,0 +1,11 @@
+name: Feature drift
+on:
+  schedule:
+    - cron: "0 11 * * 1"
+  workflow_dispatch:
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: test -f docs/film_first.md && echo "cue warehouse pending"
