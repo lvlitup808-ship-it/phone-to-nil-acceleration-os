@@ -1,0 +1,7 @@
+[
+  {"id": "drill_wall_shin", "cue": "shin_angle", "name": "Wall shin-angle holds", "sets": "3x8s / side", "cue_language": "Load the front shin. Push the wall away, don't stand up.", "progression": "wall hold → falling start → 10-yard burst"},
+  {"id": "drill_push_step", "cue": "first_step_separation", "name": "Push-step med ball starts", "sets": "6x10yd", "cue_language": "Finish the first push before you chase step two.", "progression": "med ball chest → unresisted → fly-10"},
+  {"id": "drill_hip_lock", "cue": "hip_height", "name": "Low-heel acceleration marches", "sets": "4x15yd", "cue_language": "Hips stay behind the drive line for three contacts.", "progression": "march → skip → 20yd build"},
+  {"id": "drill_cut_brake", "cue": "deceleration", "name": "Approach-step cuts", "sets": "8x each way", "cue_language": "Shorten the last step. Drop the hip, don't lean the torso.", "progression": "2-step cut → 5yd approach → live angle"},
+  {"id": "drill_stiff_ankle", "cue": "ground_contact_time", "name": "Ankle-stiff pogos to first step", "sets": "3x10 + 4 starts", "cue_language": "Quiet contact. Get off the ground.", "progression": "pogo → snap-down → timed 10"}
+]

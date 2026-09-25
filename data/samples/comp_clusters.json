@@ -1,0 +1,4 @@
+[
+  {"id": "cluster_wr_acc_hs_a", "position": "wr_release", "school_level": "hs", "n": 42, "p25": 2500, "p50": 6000, "p75": 14000, "assumptions": ["HS skill", "regional market", "synthetic seed"]},
+  {"id": "cluster_skill_g5_b", "position": "wr_release", "school_level": "g5", "n": 28, "p25": 8000, "p50": 22000, "p75": 55000, "assumptions": ["G5 snap share unknown", "synthetic seed"]}
+]
