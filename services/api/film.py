@@ -37,6 +37,18 @@ class ShareIn(BaseModel):
     ttl_days: int = 30
 
 
+def _purge_share_links(consent: dict[str, Any]) -> dict[str, int]:
+    n = 0
+    for row in SHARE.values():
+        if row["athlete_id"] == consent["athlete_id"] and not row["revoked"]:
+            row["revoked"] = True
+            n += 1
+    return {"passport_share": n}
+
+
+CONSENT.purgers.append(_purge_share_links)
+
+
 @router.post("/ingest/check")
 def ingest_check(body: IngestCheckIn) -> dict[str, Any]:
     if body.filename:

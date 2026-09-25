@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime, timezone
+from collections.abc import Callable
 from typing import Any
 
 from packages.shared.slice2 import AssessmentStatus
@@ -12,6 +13,8 @@ class ConsentStore:
     def __init__(self) -> None:
         self.consents: dict[str, dict[str, Any]] = {}
         self.receipts: dict[str, dict[str, Any]] = {}
+        # Called on revoke with the consent row; each returns {artifact_kind: n_deleted}.
+        self.purgers: list[Callable[[dict[str, Any]], dict[str, int]]] = []
 
     def grant(self, athlete_id: str, scope: list[str], parent: bool = False) -> dict[str, Any]:
         cid = f"cns_{hashlib.sha256(f'{athlete_id}:{datetime.now(timezone.utc).isoformat()}'.encode()).hexdigest()[:10]}"
@@ -32,10 +35,15 @@ class ConsentStore:
             raise KeyError(consent_id)
         row["revoked"] = True
         row["revoked_at"] = datetime.now(timezone.utc).isoformat()
+        counts = {kind: 0 for kind in artifacts}
+        for purge in self.purgers:
+            for kind, n in purge(row).items():
+                counts[kind] = counts.get(kind, 0) + n
         payload = {
             "consent_id": consent_id,
             "athlete_id": row["athlete_id"],
             "deleted_artifacts": artifacts,
+            "deleted_counts": counts,
             "revoked_at": row["revoked_at"],
         }
         sig = hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()

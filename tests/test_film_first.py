@@ -58,3 +58,24 @@ def test_nil_scenarios_schema_only():
     body = client.get("/nil-band/a1/scenarios").json()
     assert body["status"] == "schema_only"
     assert body["scenarios"] == []
+
+
+def test_revoke_actually_deletes_what_the_receipt_lists(tmp_path, monkeypatch):
+    monkeypatch.setenv("ARTIFACTS_DIR", str(tmp_path))
+    cid = client.post("/consent", json={"athlete_id": "rv1", "consent_scope": ["capture", "coach"]}).json()["consent_id"]
+    up = client.post("/upload", json={"athlete_id": "rv1", "angle": "side", "uri": "demo://rv", "consent_id": cid})
+    assert up.status_code == 200
+    pose = client.post(
+        "/pose/assess",
+        json={"athlete_id": "rv1", "clip_id": "clp_rv1", "movement": "release", "consent_id": cid},
+    ).json()
+    assert (tmp_path / "clp_rv1").is_dir()
+    share = client.post("/share-link", json={"athlete_id": "rv1", "recipient": "c@x.test"}).json()
+
+    receipt = client.post(f"/consent/{cid}/revoke").json()
+    assert receipt["deleted_counts"] == {"clips": 1, "pose_debug": 1, "passport_share": 1}
+    assert not (tmp_path / "clp_rv1").exists()
+    report = client.get(f"/report/{pose['id']}").json()
+    assert report["assessment_status"] == "scope_revoked"
+    assert report["cues"] == []
+    assert client.post(f"/share-link/{share['token']}/revoke").json()["revoked"] is True

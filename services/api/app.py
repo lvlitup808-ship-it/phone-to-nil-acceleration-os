@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -172,6 +173,30 @@ def artifacts_dir_for(clip_id: str) -> Path:
     if folder.parent != root:
         raise HTTPException(422, "clip_id resolves outside the artifacts directory")
     return folder
+
+
+def _purge_for_consent(consent: dict[str, Any]) -> dict[str, int]:
+    """Delete what a revoked consent covered: clips, pose debug files; blank assessments."""
+    cid = consent["consent_id"]
+    clips = [k for k, v in STORE["clips"].items() if v.get("consent_id") == cid]
+    for k in clips:
+        del STORE["clips"][k]
+    debug = 0
+    for row in STORE["assessments"].values():
+        if row.get("consent_id") != cid:
+            continue
+        CONSENT.cascade(row)
+        for clip_id in (row.get("assessment_lineage") or {}).get("clip_ids", []):
+            if CLIP_ID_RE.fullmatch(clip_id):
+                folder = artifacts_dir_for(clip_id)
+                if folder.is_dir():
+                    shutil.rmtree(folder)
+                    debug += 1
+        row["artifacts"] = {}
+    return {"clips": len(clips), "pose_debug": debug}
+
+
+CONSENT.purgers.append(_purge_for_consent)
 
 
 @app.post("/pose/assess")
