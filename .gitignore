@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+.next/
+.expo/
+dist/
+web-build/
+*.tsbuildinfo
+npm-debug.log*
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+*.pem
+
+# Data / models
+data/raw/
+data/processed/
+models/artifacts/
+*.pt
+*.onnx
+*.ckpt
+wandb/
+mlruns/
+.dvc/tmp/
+
+# Media
+*.mp4
+*.mov
+*.avi
+!data/samples/.gitkeep
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Terraform
+infra/terraform/.terraform/
+*.tfstate
+*.tfstate.*
