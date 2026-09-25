@@ -3,41 +3,50 @@
 Date:
 Field:
 Filmers:
-Athletes (WR / DB):
-Consents scanned:
+Athletes present:
 
 ## Ingest
 
-| clip | athlete | angle | fps | duration | accepted | reject reason |
-| --- | --- | --- | --- | --- | --- | --- |
-|  |  |  |  |  |  |  |
+Clips filmed:
+Clips accepted:
+Clips rejected:
 
-Clean WR:
-Clean DB:
+| filename | fps | duration | angles | reason |
+| --- | --- | --- | --- | --- |
+|  |  |  |  |  |
 
 ## First clean WR clip
 
 clip_id:
-pose_debug: skeleton tracks through burst? Y/N  notes:
-calibration mode: field_line / height_prior / none
-visible yard lines in frame? Y/N
-event timing vs film (frames off): motion_start __ first_step __ release/break __
+pose_debug.mp4 — skeleton tracks through burst? Y/N
+joint flip or lag? Y/N notes:
+calibration_debug — mode: field_line / height_prior / uncalibrated
+field had visible lines? Y/N
+fallback unexpected? Y/N
 
-## WR cue sanity (plausible bands)
+## Events (frames off vs what you see)
 
-| cue | value | in band? |
-| --- | --- | --- |
-| shin_angle_at_contact |  | 30–50 |
-| hip_height_at_contact |  | 0.75–0.95 |
-|  |  |  |
+motion_start:
+first_step:
+release or break:
+
+Off by more than 3 frames? Y/N
+
+## WR cue sanity (plausible bands, not targets)
+
+shin_angle_at_contact (30–50 plausible):
+hip_height_at_contact (0.75–0.95 plausible):
+outside band on a clean clip → feature formula, not the model.
 
 ## Decision
 
-[ ] ≥4 WR + ≥4 DB → Session 2 + label in 48h
-[ ] 2–3 same reject reason → rewrite capture guide, then Session 2
-[ ] 2–3 mixed reasons → one filmer next time
-[ ] 0–1 → one athlete, one filmer, one passing clip. No Session 2. No code.
+- [ ] ≥4 WR + ≥4 DB clean → Session 2 + label in 48h
+- [ ] 2–3 clean, same reject reason → rewrite capture guide, then Session 2
+- [ ] 2–3 clean, mixed rejects → one filmer only next session
+- [ ] 0–1 clean → no Session 2, no code, one athlete / one filmer / one passing clip
 
-Fixes before Session 2:
+## What failed and why
 
-Coach labeled one clip end-to-end in under 4 minutes? Y/N  clip_id:
+## Fix before Session 2 (if any)
+
+Do not start Slice 3 from this report.
