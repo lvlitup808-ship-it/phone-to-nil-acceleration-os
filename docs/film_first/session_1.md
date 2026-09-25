@@ -2,6 +2,8 @@
 
 D36–D45 is the right scope. No product surface. No Slice 3. The repo is done until film exists. Read this once, then put the laptop away until Session 1 is labeled.
 
+PR #5 is the last commit this week.
+
 ## Before you leave for the field
 
 Print these four. Nothing else.
@@ -12,6 +14,14 @@ Print these four. Nothing else.
 4. A blank assignments sheet — `docs/film_first/assignments_sheet.md` — fill athlete IDs on site
 
 Checklist for the bag: two phones (backup), a tripod or a wall to brace against, painters tape for athlete ID labels, a printed yard-line reference in case the field is unmarked.
+
+## Five things that will save you on the field
+
+1. Consent before cleats. Signed form in hand before the athlete touches the field. Retrofitting consent is the one thing that kills a clip after you've already shot it.
+2. Sun behind you, not behind the athlete. Backlit clips fail pose confidence. If the field only has one orientation, shoot early morning or late afternoon, not noon.
+3. Warm up before take one. Cold first take always looks like a bad clip. It isn't. It's a cold athlete. Take zero doesn't count.
+4. Backup the same night. Phone + cloud + laptop before you sleep. Phones get lost. Cards corrupt. Six consents are worth more than a night's sleep.
+5. Log rejects in the report, not in your head. The pattern across rejects is the protocol fix for Session 2. You won't remember it Thursday.
 
 ## Session 1 field rules
 
@@ -64,6 +74,8 @@ Every one of those feels productive and delays the only thing that unblocks the 
 - Clips ingested, at least 4 clean
 - 1 clip labeled end-to-end by a real coach in under 4 minutes
 - session_1_report.md written with what failed and why
+
+Friday metric, one line: wr_labeled + db_labeled. Not PRs, not CI, not features.
 
 That's it. Not a merged PR. Not a new feature. A field session, a labeled clip, and an honest report.
 
