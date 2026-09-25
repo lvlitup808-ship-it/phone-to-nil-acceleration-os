@@ -12,6 +12,7 @@ lint:
 	python3 -m mypy services packages
 	python3 -m compileall -q services packages tests
 	python3 -m packages.shared.schemas
+	python3 -m services.golden_set.manifest
 
 golden:
 	python3 -m services.golden_set.harness

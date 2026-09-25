@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "created_at": "2026-09-25T00:00:00Z",
   "labeling_protocol_version": "1.0.0",
   "golden_set": "pending",
@@ -7,27 +7,50 @@
   "clips": [
     {
       "clip_id": "clp_0001",
+      "athlete_id": null,
       "position_target": "WR",
       "movement": "release",
+      "surface": null,
+      "lighting": null,
       "athlete_height_cm": 185,
-      "camera_side": { "path": "clips/clp_0001_side.mp4", "fps": 60, "present": false },
-      "camera_45": { "path": "clips/clp_0001_45.mp4", "fps": 60, "present": false },
+      "camera_side": {
+        "path": "clips/clp_0001_side.mp4",
+        "fps": 60,
+        "present": false
+      },
+      "camera_45": {
+        "path": "clips/clp_0001_45.mp4",
+        "fps": 60,
+        "present": false
+      },
       "disputed": false,
       "labels": {
         "events": {
-          "motion_start": { "t_ms": 416, "tolerance_ms": 80 },
-          "first_step": { "t_ms": 616, "tolerance_ms": 80 }
+          "motion_start": {
+            "t_ms": 416,
+            "tolerance_ms": 80
+          },
+          "first_step": {
+            "t_ms": 616,
+            "tolerance_ms": 80
+          }
         },
         "cues": {}
       }
     },
     {
       "clip_id": "clp_0002",
+      "athlete_id": null,
       "position_target": "DB",
       "movement": "break",
+      "surface": null,
+      "lighting": null,
       "athlete_height_cm": 183,
       "disputed": false,
-      "labels": { "events": {}, "cues": {} }
+      "labels": {
+        "events": {},
+        "cues": {}
+      }
     }
   ]
 }

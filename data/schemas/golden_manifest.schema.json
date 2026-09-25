@@ -1,0 +1,226 @@
+{
+  "$defs": {
+    "Camera": {
+      "additionalProperties": false,
+      "properties": {
+        "fps": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fps"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "present": {
+          "default": false,
+          "title": "Present",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "title": "Camera",
+      "type": "object"
+    },
+    "ManifestClip": {
+      "additionalProperties": false,
+      "properties": {
+        "athlete_height_cm": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Athlete Height Cm"
+        },
+        "athlete_id": {
+          "anyOf": [
+            {
+              "pattern": "^ath_\\d{4}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Athlete Id"
+        },
+        "camera_45": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Camera"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "camera_side": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Camera"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "clip_id": {
+          "pattern": "^clp_\\d{4}$",
+          "title": "Clip Id",
+          "type": "string"
+        },
+        "disputed": {
+          "default": false,
+          "title": "Disputed",
+          "type": "boolean"
+        },
+        "labels": {
+          "additionalProperties": true,
+          "title": "Labels",
+          "type": "object"
+        },
+        "lighting": {
+          "anyOf": [
+            {
+              "enum": [
+                "daylight",
+                "night_lit",
+                "indoor"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lighting"
+        },
+        "movement": {
+          "enum": [
+            "release",
+            "break"
+          ],
+          "title": "Movement",
+          "type": "string"
+        },
+        "position_target": {
+          "enum": [
+            "WR",
+            "DB"
+          ],
+          "title": "Position Target",
+          "type": "string"
+        },
+        "surface": {
+          "anyOf": [
+            {
+              "enum": [
+                "turf",
+                "grass",
+                "track"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Surface"
+        }
+      },
+      "required": [
+        "clip_id",
+        "position_target",
+        "movement"
+      ],
+      "title": "ManifestClip",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "clips": {
+      "items": {
+        "$ref": "#/$defs/ManifestClip"
+      },
+      "title": "Clips",
+      "type": "array"
+    },
+    "created_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Created At"
+    },
+    "golden_set": {
+      "enum": [
+        "pending",
+        "ready"
+      ],
+      "title": "Golden Set",
+      "type": "string"
+    },
+    "labeling_protocol_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Labeling Protocol Version"
+    },
+    "note": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Note"
+    },
+    "schema_version": {
+      "default": "1.1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "golden_set",
+    "clips"
+  ],
+  "title": "GoldenManifest",
+  "type": "object"
+}

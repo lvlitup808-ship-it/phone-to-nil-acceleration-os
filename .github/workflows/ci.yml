@@ -16,6 +16,7 @@ jobs:
       - run: python -m mypy services packages
       - run: python -m compileall -q services packages tests
       - run: python -m packages.shared.schemas
+      - run: python -m services.golden_set.manifest
       - run: python -m pytest tests -q
   docker:
     runs-on: ubuntu-latest

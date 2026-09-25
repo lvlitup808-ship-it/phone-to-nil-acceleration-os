@@ -12,6 +12,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
+from packages.shared.golden import GoldenManifest
 from packages.shared.models import ClipQuality, Cue, NILBand
 from packages.shared.slice2 import Slice2Assessment, Slice2Cue
 
@@ -23,6 +24,7 @@ MODELS: dict[str, type[BaseModel]] = {
     "nil_band.schema.json": NILBand,
     "slice2_cue.schema.json": Slice2Cue,
     "slice2_assessment.schema.json": Slice2Assessment,
+    "golden_manifest.schema.json": GoldenManifest,
 }
 
 
