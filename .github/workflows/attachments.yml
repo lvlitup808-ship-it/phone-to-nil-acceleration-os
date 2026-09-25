@@ -1,0 +1,14 @@
+name: Attachments
+on:
+  pull_request:
+    paths: ["docs/attachments/**"]
+jobs:
+  ingest-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Attachment checklist present
+        run: |
+          test -f docs/attachments/README.md
+          test -f docs/attachments/links.md
+          test -f docs/attachments/x-posts.md
