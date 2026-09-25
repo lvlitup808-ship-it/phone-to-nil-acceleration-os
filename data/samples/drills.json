@@ -1,0 +1,28 @@
+[
+  {
+    "drill_id": "drl_wall_shin",
+    "id": "drill_wall_shin",
+    "cue": "shin_angle_at_contact",
+    "cue_targets": ["shin_angle_at_contact", "first_step_separation"],
+    "name": "Wall shin-angle holds",
+    "sets": "3x8s / side",
+    "cue_language": "Load the front shin.",
+    "progression": "wall hold",
+    "evidence_chunk_ids": ["chk_shin_01"],
+    "coach_reviewed": true,
+    "coach_id": "coach_001"
+  },
+  {
+    "drill_id": "drl_draft_unreviewed",
+    "id": "drill_draft_unreviewed",
+    "cue": "lean_at_release",
+    "cue_targets": ["lean_at_release"],
+    "name": "UNREVIEWED draft",
+    "sets": "0",
+    "cue_language": "placeholder",
+    "progression": "none",
+    "evidence_chunk_ids": [],
+    "coach_reviewed": false,
+    "coach_id": "coach_001"
+  }
+]

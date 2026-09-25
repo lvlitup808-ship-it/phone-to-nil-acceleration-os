@@ -1,0 +1,6 @@
+{
+  "wr_release": {"cues": ["shin_angle", "first_step_separation", "hip_height"], "film": ["side", "fortyfive"]},
+  "db_break": {"cues": ["deceleration", "hip_height", "asymmetry"], "film": ["side", "fortyfive"]},
+  "rb_first_cut": {"cues": ["shin_angle", "deceleration", "ground_contact_time"], "film": ["side", "front"]},
+  "ol_first_step": {"cues": ["shin_angle", "hip_height", "ground_contact_time"], "film": ["side"]}
+}

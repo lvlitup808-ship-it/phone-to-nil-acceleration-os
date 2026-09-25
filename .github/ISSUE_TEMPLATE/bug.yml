@@ -1,0 +1,10 @@
+name: Bug
+description: Something is broken
+labels: [bug]
+body:
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+    validations:
+      required: true

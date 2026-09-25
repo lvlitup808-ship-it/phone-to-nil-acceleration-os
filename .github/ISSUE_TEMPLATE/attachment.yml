@@ -1,0 +1,10 @@
+name: Attachment
+description: Ingest a note, dataset, diagram, or legal doc
+labels: [attachments]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Attachment name
+    validations:
+      required: true

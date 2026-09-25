@@ -1,0 +1,6 @@
+{
+  "share_link": { "max_ttl_days": 30, "revocable": true },
+  "nil_scenario": { "status": "schema_only", "slice": 4 },
+  "position_fit_v0": { "status": "blocked_on_golden_set" },
+  "asymmetry": { "display": "trend_only", "forbidden": ["injury_risk"] }
+}

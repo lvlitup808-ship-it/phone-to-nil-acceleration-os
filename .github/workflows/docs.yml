@@ -1,0 +1,16 @@
+name: Docs
+on:
+  pull_request:
+    paths: ["docs/**", "README.md"]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Required docs exist
+        run: |
+          test -f README.md
+          test -f docs/legal/nil-disclaimer.md
+          test -f docs/jev-judgments.md
+          test -f docs/rag-evidence.md
+          test -d docs/attachments

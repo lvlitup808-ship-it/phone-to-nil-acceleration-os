@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Athlete",
+  "type": "object",
+  "required": ["id", "display_name"],
+  "properties": {
+    "id": { "type": "string" },
+    "display_name": { "type": "string" },
+    "school_level": { "type": "string" }
+  }
+}

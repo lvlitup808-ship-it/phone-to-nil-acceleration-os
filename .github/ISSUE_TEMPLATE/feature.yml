@@ -1,0 +1,17 @@
+name: Feature
+description: New product or pipeline work
+labels: [feature]
+body:
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+    validations:
+      required: true
+  - type: checkboxes
+    id: jev
+    attributes:
+      label: Decision routing
+      options:
+        - label: Passed the Jev three-question test
+        - label: Needs generation + RAG evidence instead

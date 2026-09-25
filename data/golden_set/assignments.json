@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "dashboard": {
+    "wr_labeled": "0/10",
+    "db_labeled": "0/10",
+    "inter_rater": "pending"
+  },
+  "assignments": [
+    {
+      "athlete_id": "ath_0001",
+      "position_target": "WR",
+      "movement": "release",
+      "assigned_to": "coach_001",
+      "due_date": "2026-10-02",
+      "consent_id": "cns_0001",
+      "status": "unfilmed",
+      "notes": ""
+    },
+    {
+      "athlete_id": "ath_0002",
+      "position_target": "DB",
+      "movement": "break",
+      "assigned_to": "coach_001",
+      "due_date": "2026-10-02",
+      "consent_id": "cns_0002",
+      "status": "unfilmed",
+      "notes": ""
+    }
+  ]
+}
