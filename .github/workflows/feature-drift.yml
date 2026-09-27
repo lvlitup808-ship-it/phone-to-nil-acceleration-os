@@ -7,5 +7,5 @@ jobs:
   compare:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: test -f docs/film_first.md && echo "cue warehouse pending"
