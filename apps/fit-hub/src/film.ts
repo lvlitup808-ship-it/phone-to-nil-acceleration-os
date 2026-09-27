@@ -19,7 +19,7 @@ export const WORK: WorkItem[] = [
 export const PILLARS = [
   {
     title: "Film intake",
-    body: "Consent, surface, lighting, and athlete_id. A filmed clip without those four does not count toward the gate.",
+    body: "Surface, lighting, and athlete_id belong on every filmed clip or the manifest check fails. Consent is a separate step and is not part of that check.",
     tags: ["TURF / GRASS / TRACK", "DAYLIGHT / NIGHT / INDOOR"],
   },
   {
