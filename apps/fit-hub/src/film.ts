@@ -19,7 +19,7 @@ export const WORK: WorkItem[] = [
 export const PILLARS = [
   {
     title: "Film intake",
-    body: "Consent, surface, lighting, athlete_id. A filmed clip without those three does not count toward the gate.",
+    body: "Consent, surface, lighting, and athlete_id. A filmed clip without those four does not count toward the gate.",
     tags: ["TURF / GRASS / TRACK", "DAYLIGHT / NIGHT / INDOOR"],
   },
   {
@@ -29,7 +29,7 @@ export const PILLARS = [
   },
   {
     title: "Closed loop",
-    body: "Capture → assess → prescribe → re-test. drills stay empty while the gate is closed.",
+    body: "Capture → assess → prescribe → re-test. Drills stay empty while the gate is closed.",
     tags: ["INGEST", "ASSESS", "RE-TEST"],
   },
   {
