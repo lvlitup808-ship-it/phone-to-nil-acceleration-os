@@ -49,14 +49,14 @@ function Intro({ onDone }: { onDone: () => void }) {
       {phase === "word" ? (
         <div className="flex h-full items-center justify-center bg-white text-black">
           <p className="font-display text-[clamp(2.5rem,8vw,6rem)] font-semibold tracking-tight">
-            20
-            <span className="relative -top-1 mx-0.5 inline-block h-[0.18em] w-[0.18em] rounded-full bg-black align-middle" />
+            FIT
+            <span className="relative -top-1 mx-1 inline-block h-[0.18em] w-[0.18em] rounded-full bg-black align-middle" />
             HUB
           </p>
         </div>
       ) : (
         <div className="relative flex h-full flex-col items-center justify-center bg-[#e8e8e8] text-black">
-          <p className="absolute top-10 font-mono text-[11px] tracking-[0.2em] text-neutral-500">04;47</p>
+          <p className="absolute top-10 font-mono text-[11px] tracking-[0.2em] text-neutral-500">REEL</p>
           <p
             className="pointer-events-none absolute inset-x-0 text-center font-display text-[clamp(4.5rem,22vw,16rem)] font-bold leading-none text-transparent"
             style={{ WebkitTextStroke: "6px #111" }}
@@ -76,7 +76,7 @@ function Intro({ onDone }: { onDone: () => void }) {
               Fit Hub
             </span>
           </div>
-          <p className="absolute bottom-10 font-mono text-[11px] tracking-[0.2em] text-neutral-500">10-YD</p>
+          <p className="absolute bottom-10 font-mono text-[11px] tracking-[0.2em] text-neutral-500">DEMO FILM</p>
         </div>
       )}
     </div>
@@ -90,7 +90,7 @@ export default function App() {
     <div className="min-h-screen bg-black text-[#eee]">
       {intro && <Intro onDone={() => setIntro(false)} />}
 
-      <header className="fixed inset-x-0 top-0 z-40 flex items-center justify-between px-6 py-5 md:px-10">
+      <header className="fixed inset-x-0 top-0 z-40 flex items-center justify-between border-b border-[var(--color-line)] bg-black/80 px-6 py-4 backdrop-blur-sm md:px-10">
         <a href="#top" className="font-display text-sm font-semibold tracking-tight">
           FIT HUB
         </a>
@@ -108,8 +108,8 @@ export default function App() {
       </header>
 
       <main id="top">
-        <section className="grid min-h-screen grid-cols-1 items-end gap-16 px-6 pb-24 pt-28 md:grid-cols-[1.2fr_0.8fr] md:px-10 md:pt-36">
-          <h1 className="stack-head text-[clamp(2.6rem,7vw,5.6rem)]">
+        <section className="grid min-h-screen grid-cols-1 content-end items-end gap-10 px-6 pb-16 pt-24 md:grid-cols-[1.2fr_0.8fr] md:px-10">
+          <h1 className="stack-head text-[clamp(2rem,5.2vw,4.25rem)]">
             {"WE\nFILM\nTHE\nFIRST\nSTEP\nTHEN\nWE\nRUN\nIT\nAGAIN".split("\n").map((w, i) => (
               <span key={`${w}-${i}`} className="block">
                 {w}
@@ -186,10 +186,10 @@ export default function App() {
             the point
           </h2>
           <a
-            href="mailto:hello@lvlitup.ai"
+            href="#lab"
             className="mt-12 inline-block border border-[#eee] px-6 py-3 font-mono text-[11px] tracking-[0.18em] hover:bg-[#eee] hover:text-black"
           >
-            WORK WITH US
+            ENTER THE LAB
           </a>
           <p className="mt-16 font-mono text-[10px] tracking-[0.14em] text-[var(--color-mute)]">
             FIT HUB © 2026 · DEMO FILM, NOT AN OFFICIAL TEAM PAGE
