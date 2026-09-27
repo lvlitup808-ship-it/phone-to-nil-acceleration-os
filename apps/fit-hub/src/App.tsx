@@ -95,13 +95,13 @@ export default function App() {
 
       {/* Header */}
       <header
-        className="relative z-20 flex items-center justify-between"
+        className="relative z-20 flex flex-wrap items-center justify-between gap-x-6 gap-y-3"
         style={{ paddingInline: 'var(--pad-x)', paddingTop: 'var(--header-pt)', paddingBottom: 'var(--section-gap)' }}
       >
         <button
           type="button"
           onClick={close}
-          className="flex items-start font-orbitron font-black tracking-[0.15em] transition-opacity hover:opacity-80"
+          className="flex shrink-0 items-start whitespace-nowrap font-orbitron font-black tracking-[0.15em] transition-opacity hover:opacity-80"
           style={{ fontSize: 'var(--logo)' }}
         >
           FIT HUB
@@ -110,7 +110,7 @@ export default function App() {
           </span>
         </button>
         <nav
-          className="flex items-center font-medium uppercase tracking-[0.2em]"
+          className="flex items-center whitespace-nowrap font-medium uppercase tracking-[0.2em]"
           style={{ fontSize: 'var(--nav)', gap: 'var(--gap-nav)' }}
         >
           {NAV.map((n) => (
