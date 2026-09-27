@@ -36,9 +36,22 @@ without them would silently not count, so the check refuses it instead.
 Clips with no film (the two fixtures, `clp_0001` and `clp_0002`) keep these fields as `null`. Do not
 fill them with guesses; they describe film that does not exist.
 
-## Adding a filmed clip
+## Adding a filmed clip (one command)
 
-1. Put the files in `clips/`. `*.mp4` is gitignored, so raw athlete video is never committed.
-2. Add an entry with `present: true` and the three fields copied from the intake form.
-3. Run `python -m services.golden_set.manifest`.
-4. Coach labels go in `labels/`, one file per coach per clip, each with a `coach_id`.
+```bash
+python -m services.golden_set.add_clip \
+  --athlete-id ath_0001 \
+  --position WR \
+  --movement release \
+  --surface turf \
+  --lighting daylight \
+  --height-cm 183 \
+  --side /path/to/side.mp4 --side-fps 60 \
+  --fortyfive /path/to/45.mp4 --fortyfive-fps 60
+```
+
+- Copies the videos into `data/golden_set/clips/` (gitignored — raw athlete video is never committed).
+- Appends a validated entry to `manifest.json` with `present: true` and the three diversity fields.
+- Optional `--clip-id clp_NNNN` (default: next free id). `--dry-run` prints without writing.
+- Then run `python -m services.golden_set.manifest` (or `make lint`) to confirm.
+- Coach labels go in `labels/`, one file per coach per clip, each with a `coach_id`.
