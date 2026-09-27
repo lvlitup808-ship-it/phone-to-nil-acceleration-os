@@ -1,0 +1,69 @@
+@import 'tailwindcss';
+
+/*
+ * Fluid size system.
+ * LGPSM's :root clamps were not available on this machine; these are stand-in
+ * values with the same variable names. Replace --pad-x … --main-py with the
+ * LGPSM originals 1:1 when you have them.
+ */
+:root {
+  --pad-x: clamp(1.25rem, 3.2vw, 3.5rem);
+  --header-pt: clamp(1rem, 2.2vw, 2rem);
+  --section-gap: clamp(0.75rem, 1.6vw, 1.5rem);
+  --logo: clamp(1.1rem, 0.9vw + 0.8rem, 1.6rem);
+  --logo-deg: clamp(0.55rem, 0.4vw + 0.4rem, 0.8rem);
+  --nav: clamp(0.62rem, 0.25vw + 0.52rem, 0.8rem);
+  --gap-nav: clamp(1rem, 2.2vw, 2.5rem);
+  --icon: clamp(1rem, 0.6vw + 0.8rem, 1.35rem);
+  --headline: clamp(2.6rem, 6.2vw, 6.75rem);
+  --checker-w: clamp(2.2rem, 4.6vw, 5rem);
+  --checker-h: clamp(1.1rem, 2.3vw, 2.5rem);
+  --body: clamp(0.66rem, 0.25vw + 0.56rem, 0.85rem);
+  --btn-px: clamp(1rem, 1.6vw, 1.6rem);
+  --btn-py: clamp(0.65rem, 1vw, 0.95rem);
+  --globe: clamp(2.5rem, 3.6vw, 4rem);
+  --feature-min: clamp(15rem, 20vw, 21rem);
+  --feature-pad: clamp(1rem, 1.6vw, 1.6rem);
+  --drawer-max: clamp(20rem, 32vw, 30rem);
+  --drawer-pad: clamp(1.25rem, 2.4vw, 2.25rem);
+  --main-py: clamp(1.5rem, 4vh, 3.5rem);
+
+  --footer-h: clamp(7.5rem, 16vw, 11.5rem);
+  --footer-gap: clamp(0.35rem, 0.6vw, 0.6rem);
+  --footer-label: clamp(0.5rem, 0.2vw + 0.42rem, 0.65rem);
+}
+
+.font-orbitron {
+  font-family: 'Orbitron', sans-serif;
+}
+
+.font-jakarta {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Footer film rail: 7 across on desktop, swipeable strip below lg. */
+.film-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--footer-gap);
+}
+@media (max-width: 1023.98px) {
+  .film-strip {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 72vw;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--pad-x);
+  }
+  .film-strip > * {
+    scroll-snap-align: start;
+  }
+}
