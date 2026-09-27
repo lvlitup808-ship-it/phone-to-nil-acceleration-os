@@ -1,4 +1,4 @@
-.PHONY: install test lint golden api worker valuation console up
+.PHONY: install test lint golden add-clip api worker valuation console up
 
 install:
 	python3 -m pip install -e ".[dev]"
@@ -16,6 +16,9 @@ lint:
 
 golden:
 	python3 -m services.golden_set.harness
+
+add-clip:
+	python3 -m services.golden_set.add_clip $(ARGS)
 
 api:
 	uvicorn services.api.app:app --reload --port 8000

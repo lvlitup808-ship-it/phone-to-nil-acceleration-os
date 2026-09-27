@@ -38,7 +38,20 @@ fill them with guesses; they describe film that does not exist.
 
 ## Adding a filmed clip
 
-1. Put the files in `clips/`. `*.mp4` is gitignored, so raw athlete video is never committed.
-2. Add an entry with `present: true` and the three fields copied from the intake form.
-3. Run `python -m services.golden_set.manifest`.
+1. Put both angles in `clips/`, named by the ingest contract
+   (`ath_0042_WR_release_side_20260925.mp4`, `ath_0042_WR_release_45_20260925.mp4`). `*.mp4` is
+   gitignored, so raw athlete video is never committed.
+2. Add the entry with the helper, copying surface and lighting from the intake form:
+
+   ```bash
+   python -m services.golden_set.add_clip --side ath_0042_WR_release_side_20260925.mp4 \
+       --45 ath_0042_WR_release_45_20260925.mp4 --surface turf --lighting daylight --fps 60
+   ```
+
+   It reads `athlete_id`, position and movement from the file names, picks the next `clip_id`, and
+   refuses the clip if either angle is not on disk (`missing_side_or_45`), a name breaks the contract,
+   the two files disagree, surface or lighting is missing, or the film is already in the manifest.
+   `--dry-run` prints the entry without writing it.
+3. `python -m services.golden_set.manifest` (also in `make lint`) re-checks every clip. A camera with
+   `present: true` must be `clips/<contract name>.mp4` matching the clip's athlete, position and movement.
 4. Coach labels go in `labels/`, one file per coach per clip, each with a `coach_id`.
