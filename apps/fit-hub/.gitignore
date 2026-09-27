@@ -1,5 +1,0 @@
-node_modules/
-dist/
-# Demo film is local only: real athletes, never committed (see repo CONTRIBUTING.md).
-public/film/*
-!public/film/README.md
