@@ -10,6 +10,7 @@ from packages.capture.contract import validate_ingest
 from packages.consent.store import ConsentStore
 from services.api.gates import gate_state
 from services.cv_worker.ingest.naming import validate_name
+from services.golden_set import labels
 
 router = APIRouter()
 CONSENT = ConsentStore()
@@ -109,6 +110,22 @@ def assignments() -> dict[str, Any]:
 
     path = Path(__file__).resolve().parents[2] / "data/golden_set/assignments.json"
     return json.loads(path.read_text())
+
+
+@router.get("/golden/labels/{clip_id}/spec")
+def label_spec(clip_id: str) -> dict[str, Any]:
+    try:
+        return labels.spec(clip_id)
+    except labels.LabelError as exc:
+        raise HTTPException(exc.status, exc.detail) from None
+
+
+@router.post("/golden/labels", status_code=201)
+def save_label(body: labels.LabelIn) -> dict[str, Any]:
+    try:
+        return labels.save(body)
+    except labels.LabelError as exc:
+        raise HTTPException(exc.status, exc.detail) from None
 
 
 @router.get("/gates/golden")
