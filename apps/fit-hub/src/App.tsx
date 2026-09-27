@@ -108,7 +108,7 @@ export default function App() {
       </header>
 
       <main id="top">
-        <section className="grid min-h-screen grid-cols-1 content-end items-end gap-10 px-6 pb-16 pt-24 md:grid-cols-[1.2fr_0.8fr] md:px-10">
+        <section className="grid min-h-screen scroll-mt-20 grid-cols-1 content-end items-end gap-10 px-6 pb-16 pt-24 md:grid-cols-[1.2fr_0.8fr] md:px-10">
           <h1 className="stack-head text-[clamp(2rem,5.2vw,4.25rem)]">
             {"WE\nFILM\nTHE\nFIRST\nSTEP\nTHEN\nWE\nRUN\nIT\nAGAIN".split("\n").map((w, i) => (
               <span key={`${w}-${i}`} className="block">
@@ -122,7 +122,7 @@ export default function App() {
           </p>
         </section>
 
-        <section id="work" className="px-6 md:px-10">
+        <section id="work" className="scroll-mt-20 px-6 md:px-10">
           <p className="font-mono text-[10px] tracking-[0.2em] text-[var(--color-mute)]">FEATURED WORK</p>
           <div className="mt-6 grid gap-10 md:grid-cols-[1.4fr_0.6fr] md:items-start">
             <h2 className="stack-head text-[clamp(1.6rem,3.4vw,2.6rem)]">
@@ -155,7 +155,7 @@ export default function App() {
           </div>
         </section>
 
-        <section id="lab" className="px-6 py-28 md:px-10">
+        <section id="lab" className="scroll-mt-20 px-6 py-28 md:px-10">
           <p className="font-mono text-[10px] tracking-[0.2em] text-[var(--color-mute)]">THE LAB</p>
           <h2 className="stack-head mt-6 max-w-4xl text-[clamp(2rem,5vw,4.2rem)]">
             {"WE BUILD FILM PROTOCOLS AND SYSTEMS DESIGNED TO MOVE ATHLETES NOT SLIDES".split(" ").map((w, i) => (
@@ -177,7 +177,7 @@ export default function App() {
           </div>
         </section>
 
-        <section id="contact" className="px-6 pb-24 pt-8 md:px-10">
+        <section id="contact" className="scroll-mt-20 px-6 pb-24 pt-8 md:px-10">
           <h2 className="stack-head text-[clamp(2.8rem,10vw,8rem)]">
             film the
             <br />
