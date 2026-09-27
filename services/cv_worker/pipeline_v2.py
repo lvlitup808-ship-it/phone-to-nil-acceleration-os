@@ -82,6 +82,10 @@ def run_pose_assessment(
         seq = adapter.infer(None)
     else:
         try:
+            if isinstance(adapter, FixturePoseAdapter):
+                # The fixture adapter ignores frames; running it on a real clip would pass off
+                # synthetic poses as that clip. No model available means an error, not a fixture.
+                raise RuntimeError("no pose model available for real frames (POSE_ADAPTER / mediapipe)")
             seq = adapter.infer(frames, fps=fps) if isinstance(adapter, MediaPipePoseAdapter) else adapter.infer(frames)
         except Exception as exc:  # noqa: BLE001 - any adapter failure becomes status=error
             # Never substitute synthetic poses for a real clip.
