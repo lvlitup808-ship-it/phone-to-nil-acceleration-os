@@ -1,36 +1,60 @@
 @import "tailwindcss";
 
-:root {
-  --nea-black: #000000;
-  --nea-white: #eeeeee;
-  --nea-mute: #8a8a8a;
-  --nea-line: rgba(238, 238, 238, 0.12);
-  --pad-x: clamp(1.25rem, 4vw, 4.5rem);
+@theme {
+  --font-display: Geist, Sora, system-ui, sans-serif;
+  --font-body: Sora, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --color-ink: #eeeeee;
+  --color-mute: #8a8a8a;
+  --color-line: rgba(238, 238, 238, 0.12);
 }
 
-html, body, #root {
-  min-height: 100%;
-  background: #000;
-  color: #eee;
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  font-family: Sora, system-ui, sans-serif;
+  background: #000;
+  color: #eee;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: #eee;
+  color: #000;
 }
 
 .font-display {
-  font-family: Geist, Sora, system-ui, sans-serif;
-  letter-spacing: -0.035em;
+  font-family: var(--font-display);
 }
 
 .font-mono {
-  font-family: "JetBrains Mono", ui-monospace, monospace;
-  letter-spacing: 0.14em;
+  font-family: var(--font-mono);
 }
 
-::selection { background: #fff; color: #000; }
+.stack-head {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 0.92;
+  text-transform: uppercase;
+}
 
-@media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition: none !important; }
+.hairline {
+  height: 1px;
+  background: var(--color-line);
+}
+
+@keyframes intro-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.intro-leave {
+  animation: intro-out 0.6s ease forwards;
 }
