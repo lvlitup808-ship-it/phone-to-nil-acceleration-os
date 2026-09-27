@@ -61,6 +61,8 @@ Every route below exists in `services/api/app.py` or `services/api/film.py`; `te
 | `POST /share-link` | film-first | Share link, TTL capped at 30 days |
 | `POST /share-link/{token}/revoke` | film-first | Revoke a share link |
 | `GET /golden/assignments` | film-first | `data/golden_set/assignments.json` |
+| `GET /golden/labels/{clip_id}/spec` | film-first | Events and frozen cues a label for this clip must contain; 404 if not in the manifest |
+| `POST /golden/labels` | film-first | Save a coach label to `data/golden_set/labels/<clip_id>_<coach_id>.json`; `coach_id` required, append-only (409), all 5 events + 6 frozen cues unless `excluded` |
 | `GET /gates/golden` | film-first | Gate state derived from `data/golden_set/` |
 | `GET /nil-band/{athlete_id}/scenarios` | film-first | `schema_only`, `scenarios: []` |
 | `GET /position-fit/{athlete_id}` | film-first | `blocked_on_golden_set`, `clusters: []` |
