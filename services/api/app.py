@@ -73,6 +73,11 @@ class PoseAssessIn(BaseModel):
     height_cm: float | None = 185.0
     minors_mode: bool = False
     consent_id: str | None = None
+    use_real_frames: bool = False
+
+
+def real_frames_enabled() -> bool:
+    return os.getenv("POSE_REAL_FRAMES", "").lower() in {"1", "true", "yes"}
 
 
 @app.get("/health")
@@ -217,10 +222,23 @@ def pose_assess(body: PoseAssessIn) -> dict[str, Any]:
         if consent.get("revoked"):
             # Checked before the pipeline runs so no debug files are written for revoked consent.
             raise HTTPException(403, "consent revoked")
+    frames, fps = None, 60.0
+    if body.use_real_frames:
+        # Off unless the operator sets POSE_REAL_FRAMES; the default stays fixture poses.
+        if not real_frames_enabled():
+            raise HTTPException(409, "real-frame pose is off; set POSE_REAL_FRAMES=1 to enable it")
+        from services.cv_worker.ingest.frames import FilmNotFound, load_clip_frames
+
+        try:
+            frames, fps = load_clip_frames(body.clip_id, side_clip=body.side_clip)
+        except FilmNotFound as exc:
+            raise HTTPException(404, str(exc)) from None
     out = run_pose_assessment(
         movement=body.movement,
         clip_id=body.clip_id,
         side_clip=body.side_clip,
+        frames=frames,
+        fps=fps,
         height_cm=body.height_cm,
         athlete_id=body.athlete_id,
         artifacts_dir=artifacts_dir_for(body.clip_id),
