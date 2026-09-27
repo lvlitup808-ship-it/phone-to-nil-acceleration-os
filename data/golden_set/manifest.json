@@ -46,6 +46,16 @@
       "surface": null,
       "lighting": null,
       "athlete_height_cm": 183,
+      "camera_side": {
+        "path": "clips/clp_0002_side.mp4",
+        "fps": null,
+        "present": false
+      },
+      "camera_45": {
+        "path": "clips/clp_0002_45.mp4",
+        "fps": null,
+        "present": false
+      },
       "disputed": false,
       "labels": {
         "events": {},

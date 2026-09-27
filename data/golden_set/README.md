@@ -19,7 +19,7 @@ python -m services.golden_set.manifest
 | `movement` | `release`, `break` | |
 | `surface` | `turf`, `grass`, `track` or `null` | From the film intake form |
 | `lighting` | `daylight`, `night_lit`, `indoor` or `null` | From the film intake form |
-| `athlete_height_cm` | number or `null` | Scale fallback when no yard lines are visible |
+| `athlete_height_cm` | number or `null` | Scale fallback when no yard lines are visible. The 185 / 183 on the two fixtures are made-up scale stand-ins for the synthetic pipeline; never copy them onto a real clip |
 | `camera_side`, `camera_45` | `{path, fps, present}` | `path` is relative to `data/golden_set/`. `present: true` only when the file is really there |
 | `disputed` | `true` / `false` | Disputed clips are excluded from the gate and from MAE |
 | `labels` | object | Fixture labels only; coach labels go in `labels/<clip_id>*.json` |
