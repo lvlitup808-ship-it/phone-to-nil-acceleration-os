@@ -8,7 +8,7 @@ This is not a 40-time app. The goal is to measure first-step mechanics, shin ang
 
 ## Status (what is real today)
 
-- **Slice 1** (capture → assess → report) and **Slice 2** (WR release / DB break pose pipeline, 6 frozen cues each) run end to end on **synthetic fixture poses**. `/pose/assess` never sees real frames yet; its response says `pose_source: "fixture"`.
+- **Slice 1** (capture → assess → report) and **Slice 2** (WR release / DB break pose pipeline, 6 frozen cues each) run end to end on **synthetic fixture poses**. By default `/pose/assess` never sees real frames; its response says `pose_source: "fixture"`. Real frames run only when the server sets `POSE_REAL_FRAMES=1` and the request sends `use_real_frames: true` for a manifest clip with film on disk; if no pose model is available or it fails, the response is `assessment_status: "error"`, `pose_source: "error"`, never fixture poses.
 - **Golden set: pending.** No real, coach-labeled film exists. No accuracy (MAE) against coach labels is published; calibration error is unmeasured.
 - **Gate closed.** Prescription, passport and NIL content return `status: "blocked_on_golden_set"` until `wr_labeled >= 10`, `db_labeled >= 10`, inter-rater done, disputes `<= 2`, and the surface / lighting / athlete mix in `docs/film_first.md` is met. Live state: `GET /gates/golden`.
 - **NIL bands are schema placeholders.** p25/p50/p75 are `null`; there is no comp dataset.
@@ -54,13 +54,15 @@ Every route below exists in `services/api/app.py` or `services/api/film.py`; `te
 | `GET /passport/{athlete_id}` | 1 | `blocked_on_golden_set`, `assessments: []`; `consent` is the athlete's active scopes |
 | `POST /coach/annotate` | 1 | Append a coach note to an assessment |
 | `GET /roster/{team_id}` | 1 | In-memory roster stub |
-| `POST /pose/assess` | 2 | Six frozen cues for `release` / `break` on fixture poses, with `cue_status`, calibration mode, versions; 404 / 403 for an unknown / revoked `consent_id` |
+| `POST /pose/assess` | 2 | Six frozen cues for `release` / `break` on fixture poses (real frames only behind `POSE_REAL_FRAMES`; `pose_source` is `fixture` / `model` / `error`), with `cue_status`, calibration mode, versions; 404 / 403 for an unknown / revoked `consent_id` |
 | `POST /ingest/check` | film-first | Capture contract + filename check; reason codes in `docs/film_first/retake_templates.md` |
 | `POST /consent` | film-first | Grant consent scopes |
 | `POST /consent/{consent_id}/revoke` | film-first | Revoke, purge covered clips / pose debug / share links, signed receipt |
 | `POST /share-link` | film-first | Share link, TTL capped at 30 days |
 | `POST /share-link/{token}/revoke` | film-first | Revoke a share link |
 | `GET /golden/assignments` | film-first | `data/golden_set/assignments.json` |
+| `GET /golden/labels/{clip_id}/spec` | film-first | Events and frozen cues a label for this clip must contain; 404 if not in the manifest |
+| `POST /golden/labels` | film-first | Save a coach label to `data/golden_set/labels/<clip_id>_<coach_id>.json`; `coach_id` required, append-only (409), all 5 events + 6 frozen cues unless `excluded` |
 | `GET /gates/golden` | film-first | Gate state derived from `data/golden_set/` |
 | `GET /nil-band/{athlete_id}/scenarios` | film-first | `schema_only`, `scenarios: []` |
 | `GET /position-fit/{athlete_id}` | film-first | `blocked_on_golden_set`, `clusters: []` |

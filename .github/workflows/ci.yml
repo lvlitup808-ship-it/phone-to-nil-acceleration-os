@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       - run: python -m pip install -e ".[dev]"
@@ -23,3 +23,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build -f infra/docker/api.Dockerfile -t accel-api .
+  fit-hub:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/fit-hub
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/fit-hub/package-lock.json
+      - run: npm ci
+      - run: npm run build
