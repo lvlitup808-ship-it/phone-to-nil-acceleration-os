@@ -16,7 +16,6 @@ DOC = (ROOT / "docs/film_first/retake_templates.md").read_text()
 
 DOC_CODES = set(re.findall(r"^## Reason:\s*(\S+)", DOC, flags=re.M))
 
-# Codes the validators can emit today.
 CONTRACT_CODES = {
     "fps_below_30",
     "duration_not_4_to_12s",
@@ -28,13 +27,13 @@ VALIDATOR_CODES = CONTRACT_CODES | {NAMING_CODE}
 
 
 def test_retake_templates_list_every_validator_code():
-    missing_from_doc = VALIDATOR_CODES - DOC_CODES
-    assert not missing_from_doc, f"retake_templates.md missing reason headings: {sorted(missing_from_doc)}"
+    missing = VALIDATOR_CODES - DOC_CODES
+    assert not missing, f"missing reason headings: {sorted(missing)}"
 
 
 def test_retake_templates_has_no_orphan_codes():
     orphans = DOC_CODES - VALIDATOR_CODES
-    assert not orphans, f"retake_templates.md has unknown reason codes: {sorted(orphans)}"
+    assert not orphans, f"unknown reason codes: {sorted(orphans)}"
 
 
 def test_contract_emits_each_contract_code():
@@ -48,7 +47,8 @@ def test_contract_emits_each_contract_code():
     for kwargs in cases:
         d = validate_ingest(**kwargs)
         emitted.update(d.reasons)
-    assert CONTRACT_CODES <= emitted, f"contract did not emit: {sorted(CONTRACT_CODES - emitted)}"
+    missing = CONTRACT_CODES - emitted
+    assert not missing, f"contract did not emit: {sorted(missing)}"
 
 
 def test_naming_emits_bad_filename():
@@ -57,5 +57,4 @@ def test_naming_emits_bad_filename():
     bad, msg = validate_name("clip.mp4")
     assert bad is False
     assert msg is not None
-    # Naming does not put the code in the message; the route / docs use bad_filename.
     assert NAMING_CODE in DOC_CODES
