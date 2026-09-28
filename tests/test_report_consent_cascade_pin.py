@@ -7,7 +7,8 @@ cannot be reconstructed from the report payload.
 
 from fastapi.testclient import TestClient
 
-from services.api.app import app
+from services.api.app import STORE, app
+from services.api.film import CONSENT
 
 client = TestClient(app)
 
@@ -30,15 +31,13 @@ def test_report_after_revoke_is_scope_revoked_no_cues():
         json={"clip_ids": [up["clip_id"]], "athlete_id": "ath_report_pin"},
     ).json()
     aid = assess["id"]
-    # Attach consent so cascade has something to revoke against.
-    from services.api.film import CONSENT
-
-    CONSENT.attach(assess, cid)
+    # Mutate the stored row so report's cascade has consent_id.
+    CONSENT.attach(STORE["assessments"][aid], cid)
     client.post(f"/consent/{cid}/revoke")
     body = client.get(f"/report/{aid}").json()
     assert body.get("assessment_status") == "scope_revoked"
-    assert body.get("cues", []) == [] or body.get("cues") is None
-    assert body.get("events", []) == [] or body.get("events") is None
+    assert body.get("cues", []) == []
+    assert body.get("events", []) == []
 
 
 def test_report_unknown_is_404():
