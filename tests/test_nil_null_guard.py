@@ -8,9 +8,11 @@ returns non-null p25/p50/p75/confidence or non-empty scenarios.
 from fastapi.testclient import TestClient
 
 from services.api.app import app
+from services.valuation.app import app as valuation_app
 from services.valuation.engine import estimate_band
 
 client = TestClient(app)
+val_client = TestClient(valuation_app)
 
 
 def test_engine_estimate_band_all_numerics_null():
@@ -39,3 +41,15 @@ def test_nil_scenarios_always_empty():
     assert body["scenarios"] == []
     assert body["status"] == "schema_only"
     assert "invented" in body.get("note", "").lower() or "no numbers" in body.get("note", "").lower()
+
+
+def test_standalone_valuation_service_never_returns_numbers():
+    """services/valuation.app is a separate process; pin it too (audit Q27)."""
+    body = val_client.get("/nil-band/ath_honesty").json()
+    assert body["p25"] is None
+    assert body["p50"] is None
+    assert body["p75"] is None
+    assert body.get("confidence") is None
+    assert body.get("status") == "schema_only"
+    assert body.get("comp_cluster_ids", []) == []
+    assert "no comp dataset" in " ".join(body.get("assumptions", [])).lower()
