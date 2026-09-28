@@ -84,6 +84,16 @@ def test_blocked_routes_return_blocked_status_not_empty_200():
         assert body["status"] == "blocked_on_golden_set", path
 
 
+def test_prescribe_returns_blocked_status_while_gate_closed():
+    """Honesty: empty drills alone is not enough; status must say blocked."""
+    up = client.post("/upload", json={"athlete_id": "g1", "angle": "side", "uri": "demo://g"}).json()
+    aid = client.post("/assess", json={"clip_ids": [up["clip_id"]], "athlete_id": "g1"}).json()["id"]
+    body = client.get(f"/prescribe/{aid}").json()
+    assert body["status"] == "blocked_on_golden_set"
+    assert body["drills"] == []
+    assert body.get("primary_cue") is None
+
+
 def test_passport_consent_is_looked_up_not_asserted():
     body = client.get("/passport/nobody").json()
     assert body["consent"] == {"capture": False, "coach": False, "public": False}
