@@ -5,6 +5,8 @@ must be a code the contract or naming check can emit; every emitted code must
 appear as a heading.
 """
 
+from __future__ import annotations
+
 import re
 from pathlib import Path
 
@@ -26,22 +28,42 @@ NAMING_CODE = "bad_filename"
 VALIDATOR_CODES = CONTRACT_CODES | {NAMING_CODE}
 
 
-def test_retake_templates_list_every_validator_code():
+def test_retake_templates_list_every_validator_code() -> None:
     missing = VALIDATOR_CODES - DOC_CODES
     assert not missing, f"missing reason headings: {sorted(missing)}"
 
 
-def test_retake_templates_has_no_orphan_codes():
+def test_retake_templates_has_no_orphan_codes() -> None:
     orphans = DOC_CODES - VALIDATOR_CODES
     assert not orphans, f"unknown reason codes: {sorted(orphans)}"
 
 
-def test_contract_emits_each_contract_code():
+def test_contract_emits_each_contract_code() -> None:
     cases = [
-        dict(fps=24, duration_s=8, angles=["side", "fortyfive"], stable_first_500ms=True),
-        dict(fps=60, duration_s=2, angles=["side", "fortyfive"], stable_first_500ms=True),
-        dict(fps=60, duration_s=8, angles=["side"], stable_first_500ms=True),
-        dict(fps=60, duration_s=8, angles=["side", "fortyfive"], stable_first_500ms=False),
+        {
+            "fps": 24,
+            "duration_s": 8,
+            "angles": ["side", "fortyfive"],
+            "stable_first_500ms": True,
+        },
+        {
+            "fps": 60,
+            "duration_s": 2,
+            "angles": ["side", "fortyfive"],
+            "stable_first_500ms": True,
+        },
+        {
+            "fps": 60,
+            "duration_s": 8,
+            "angles": ["side"],
+            "stable_first_500ms": True,
+        },
+        {
+            "fps": 60,
+            "duration_s": 8,
+            "angles": ["side", "fortyfive"],
+            "stable_first_500ms": False,
+        },
     ]
     emitted: set[str] = set()
     for kwargs in cases:
@@ -51,7 +73,7 @@ def test_contract_emits_each_contract_code():
     assert not missing, f"contract did not emit: {sorted(missing)}"
 
 
-def test_naming_emits_bad_filename():
+def test_naming_emits_bad_filename() -> None:
     ok, _ = validate_name("ath_0042_WR_release_side_20260925.mp4")
     assert ok is True
     bad, msg = validate_name("clip.mp4")
