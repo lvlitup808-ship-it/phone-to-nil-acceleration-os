@@ -29,6 +29,4 @@ def test_assignments_dashboard_zeros_and_unfilmed():
     assert rows, "assignments list should exist so coaches have a queue"
     for row in rows:
         assert row["status"] == "unfilmed"
-        assert row.get("clip_id") in (None, "", missing := None) or "clip_id" not in row
-        assert row["status"] != "labeled"
-        assert row["status"] != "filmed"
+        assert row.get("clip_id") in (None, "")
