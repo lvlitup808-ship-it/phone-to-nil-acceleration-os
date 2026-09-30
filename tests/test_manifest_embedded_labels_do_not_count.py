@@ -12,7 +12,6 @@ from pathlib import Path
 
 from services.api import gates
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
