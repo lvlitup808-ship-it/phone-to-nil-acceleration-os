@@ -123,6 +123,10 @@ def assess(body: AssessIn) -> dict[str, Any]:
     for cid in body.clip_ids:
         if cid not in STORE["clips"]:
             raise HTTPException(404, f"clip {cid} not found")
+    # The assessment inherits its clips' consent so a revoke cascades to it.
+    consents = {STORE["clips"][c].get("consent_id") for c in body.clip_ids} - {None}
+    if len(consents) > 1:
+        raise HTTPException(409, "clips were uploaded under different consents; assess them separately")
     cues = extract_cues(body.template, body.metrics)
     evidence = EVIDENCE.run(f"{body.template.value} acceleration", cues[0].id.value)
     assessment_id = str(uuid.uuid4())
@@ -132,8 +136,11 @@ def assess(body: AssessIn) -> dict[str, Any]:
         "template": body.template.value,
         "cues": [c.model_dump() for c in cues],
         "evidence": evidence,
+        "clip_ids": list(body.clip_ids),
         "created_at": datetime.now(UTC).isoformat(),
     }
+    if consents:
+        CONSENT.attach(row, consents.pop())
     STORE["assessments"][assessment_id] = row
     return row
 
@@ -194,9 +201,13 @@ def _purge_for_consent(consent: dict[str, Any]) -> dict[str, int]:
     for k in clips:
         del STORE["clips"][k]
     debug = 0
+    purged = set(clips)
     for row in STORE["assessments"].values():
         if row.get("consent_id") != cid:
-            continue
+            # A Slice 1 assessment built from a clip this revoke purged is covered too.
+            if row.get("consent_id") or not purged & set(row.get("clip_ids", [])):
+                continue
+            CONSENT.attach(row, cid)
         CONSENT.cascade(row)
         for clip_id in (row.get("assessment_lineage") or {}).get("clip_ids", []):
             if CLIP_ID_RE.fullmatch(clip_id):

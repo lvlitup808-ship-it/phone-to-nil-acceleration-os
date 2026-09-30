@@ -46,7 +46,7 @@ Every route below exists in `services/api/app.py` or `services/api/film.py`; `te
 | --- | --- | --- |
 | `GET /health` | 1 | Liveness |
 | `POST /upload` | 1 | Ingest contract + clip-usable judgment; 422 with reasons on reject |
-| `POST /assess` | 1 | Template cues (no measurement behind them unless `metrics` are passed) |
+| `POST /assess` | 1 | Template cues (no measurement behind them unless `metrics` are passed); inherits the clips' `consent_id`, 409 if clips carry different consents |
 | `GET /report/{assessment_id}` | 1 | Stored assessment, after consent cascade |
 | `GET /prescribe/{assessment_id}` | 1 | `blocked_on_golden_set`, `drills: []` while gate is closed; 403 if consent revoked |
 | `POST /retest` | 1 | New assessment linked to the previous one |

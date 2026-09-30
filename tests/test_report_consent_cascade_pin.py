@@ -7,8 +7,7 @@ cannot be reconstructed from the report payload.
 
 from fastapi.testclient import TestClient
 
-from services.api.app import STORE, app
-from services.api.film import CONSENT
+from services.api.app import app
 
 client = TestClient(app)
 
@@ -31,8 +30,8 @@ def test_report_after_revoke_is_scope_revoked_no_cues():
         json={"clip_ids": [up["clip_id"]], "athlete_id": "ath_report_pin"},
     ).json()
     aid = assess["id"]
-    # Mutate the stored row so report's cascade has consent_id.
-    CONSENT.attach(STORE["assessments"][aid], cid)
+    # No manual CONSENT.attach: /assess must carry the clip's consent itself.
+    assert assess["consent_id"] == cid
     client.post(f"/consent/{cid}/revoke")
     body = client.get(f"/report/{aid}").json()
     assert body.get("assessment_status") == "scope_revoked"
