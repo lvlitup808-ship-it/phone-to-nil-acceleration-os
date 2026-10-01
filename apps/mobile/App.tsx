@@ -47,7 +47,7 @@ export default function App() {
   return (
     <SafeAreaView style={styles.wrap}>
       <Text style={styles.title}>Acceleration OS</Text>
-      <Text style={styles.sub}>Phone start → cues → NIL band</Text>
+      <Text style={styles.sub}>Phone start → cues. NIL band blocked (null) until golden set.</Text>
       <Pressable style={styles.btn} onPress={captureAndAssess}>
         <Text style={styles.btnText}>Capture start (demo)</Text>
       </Pressable>
