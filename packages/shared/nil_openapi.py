@@ -6,6 +6,8 @@ this only describes the contract (null percentiles while the gate is closed).
 
 from __future__ import annotations
 
+from typing import Any
+
 NULL_BAND_EXAMPLE = {
     "athlete_id": "ath_example",
     "status": "blocked_on_golden_set",
@@ -18,7 +20,7 @@ NULL_BAND_EXAMPLE = {
     "assumptions": ["no comp dataset exists; band fields are null placeholders"],
 }
 
-NIL_BAND_OPENAPI = {
+NIL_BAND_OPENAPI: dict[int, dict[str, Any]] = {
     200: {
         "description": (
             "Placeholder band. p25/p50/p75 and confidence stay null until a "
