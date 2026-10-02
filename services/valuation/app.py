@@ -2,6 +2,7 @@ from typing import Any
 
 from fastapi import FastAPI
 
+from services.api.gates import gate_state
 from services.valuation.engine import estimate_band
 
 app = FastAPI(title="Acceleration OS Valuation", version="0.1.0")
@@ -14,4 +15,9 @@ def health() -> dict[str, str]:
 
 @app.get("/nil-band/{athlete_id}")
 def band(athlete_id: str, template: str = "wr_release", school_level: str = "hs") -> dict[str, Any]:
-    return estimate_band(athlete_id, template, school_level).model_dump()
+    payload = estimate_band(athlete_id, template, school_level).model_dump()
+    gate = gate_state()
+    if gate["status"] != "open":
+        # Same overlay as the product API: a closed golden set is not a valuation.
+        payload.update(gate)
+    return payload
