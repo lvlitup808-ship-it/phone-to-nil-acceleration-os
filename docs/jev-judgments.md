@@ -39,3 +39,7 @@ One no → keep it as code, a coach, or a generative model.
 ## Pattern
 
 Jev answers the fuzzy question. Ordinary code owns every branch after that. See `packages/judgment`.
+
+## Honesty
+
+Jev does not emit a recruiting band. While the golden-set gate is closed, NIL status stays `blocked_on_golden_set` and p25/p50/p75 stay null. No MAE is published. A score here is a bounded choice, not a composite.

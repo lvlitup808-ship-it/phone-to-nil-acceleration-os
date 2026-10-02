@@ -28,7 +28,7 @@
 3. Biomechanics — 3–5 prioritized cues
 4. Decision — Jev choice/score for cue rank and position fit
 5. Evidence — RAG over drills, comps, legal text
-6. Valuation — ranges only
+6. Valuation — ranges only. While the golden-set gate is closed the status is `blocked_on_golden_set` and p25/p50/p75 stay null. No MAE is published.
 7. Distribution — share card, roster, collective API
 
 ## Data stores

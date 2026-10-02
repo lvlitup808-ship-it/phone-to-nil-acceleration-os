@@ -24,3 +24,7 @@ Used here for:
 6. Cite? Always for valuation and legal text.
 
 If grounding fails, rewrite the query and retrieve again. Do not emit a point estimate.
+
+## Honesty
+
+Comparable clusters are placeholders. While the golden-set gate is closed, valuation status stays `blocked_on_golden_set` and p25/p50/p75 stay null. No MAE is published. A failed grounding check must not invent a band.
