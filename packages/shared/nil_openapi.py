@@ -42,6 +42,8 @@ NIL_BAND_OPENAPI: dict[int | str, dict[str, Any]] = {
                         "p50": {"type": ["integer", "null"]},
                         "p75": {"type": ["integer", "null"]},
                         "confidence": {"type": ["number", "null"]},
+                        "comp_cluster_ids": {"type": "array", "items": {"type": "string"}},
+                        "assumptions": {"type": "array", "items": {"type": "string"}},
                     },
                 },
                 "example": NULL_BAND_EXAMPLE,
