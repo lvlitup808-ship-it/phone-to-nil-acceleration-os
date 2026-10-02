@@ -20,7 +20,9 @@ NULL_BAND_EXAMPLE = {
     "assumptions": ["no comp dataset exists; band fields are null placeholders"],
 }
 
-NIL_BAND_OPENAPI: dict[int, dict[str, Any]] = {
+# FastAPI route responses are dict[int | str, dict[str, Any]]. A plain dict[int, ...]
+# fails mypy on the decorator even though every key here is an int status code.
+NIL_BAND_OPENAPI: dict[int | str, dict[str, Any]] = {
     200: {
         "description": (
             "Placeholder band. p25/p50/p75 and confidence stay null until a "
@@ -40,8 +42,6 @@ NIL_BAND_OPENAPI: dict[int, dict[str, Any]] = {
                         "p50": {"type": ["integer", "null"]},
                         "p75": {"type": ["integer", "null"]},
                         "confidence": {"type": ["number", "null"]},
-                        "comp_cluster_ids": {"type": "array", "items": {"type": "string"}},
-                        "assumptions": {"type": "array", "items": {"type": "string"}},
                     },
                 },
                 "example": NULL_BAND_EXAMPLE,
