@@ -16,6 +16,7 @@ from packages.capture.contract import validate_ingest
 from packages.evidence.pipeline import EvidencePipeline
 from packages.judgment.client import JudgmentClient
 from packages.shared.models import ClipQuality, PositionTemplate
+from packages.shared.nil_openapi import NIL_BAND_OPENAPI
 from services.api.film import CONSENT
 from services.api.film import router as film_router
 from services.api.gates import gate_state
@@ -277,7 +278,7 @@ def retest(body: RetestIn) -> dict[str, Any]:
     return nxt
 
 
-@app.get("/nil-band/{athlete_id}")
+@app.get("/nil-band/{athlete_id}", response_model=None, responses=NIL_BAND_OPENAPI)
 def nil_band(athlete_id: str) -> dict[str, Any]:
     from services.valuation.engine import estimate_band
 
