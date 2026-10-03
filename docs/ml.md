@@ -15,3 +15,7 @@ Notebooks:
 - Test-retest ICC > 0.8 before a KPI ships on a share card
 - Capture success rate > 85% after quality gate
 - Confidence intervals on every cue and every NIL band
+
+## Live contract
+
+Live contract: NIL p25/p50/p75 are null. ICC and capture-success figures in Acceptance gates are acceptance targets, not measured results. No MAE is published. This file is not a band. Do not start Slice 3 while the golden-set gate is closed.
