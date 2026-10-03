@@ -8,6 +8,8 @@ per position).
 Progress is derived from data/golden_set/: a label counts only when its clip is
 in the manifest, at least one camera file for that clip exists on disk, and the
 label is neither excluded nor disputed. Fixture entries (no film) never count.
+Coach ids, surface, lighting, and athlete_id are stripped and casefolded so
+free-text case variants cannot inflate inter-rater or the diversity mix.
 """
 
 from __future__ import annotations
@@ -63,7 +65,7 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
         label = _load_json(path) or {}
         cid = str(label.get("clip_id", ""))
         coach = label.get("coach_id")
-        coach = coach.strip() if isinstance(coach, str) else ""
+        coach = coach.strip().casefold() if isinstance(coach, str) else ""
         if cid not in filmed or label.get("excluded") or not coach:
             continue
         if label.get("disputed") or filmed[cid].get("disputed"):
@@ -81,7 +83,7 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
         for row in rows:
             raw = row.get(key)
             if isinstance(raw, str):
-                raw = raw.strip()
+                raw = raw.strip().casefold()
             if raw:
                 values.add(raw)
         return len(values)
