@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 
 from services.api import gates
+from services.golden_set.labels import CUES, EVENTS
 
 
 def _dir(tmp_path, clips, labels):
@@ -57,6 +58,7 @@ def test_present_true_and_file_on_disk_does_count(tmp_path):
         {
             "clip_id": "c_real",
             "position_target": "WR",
+            "movement": "release",
             "athlete_id": "ath_x",
             "surface": "turf",
             "lighting": "daylight",
@@ -68,7 +70,12 @@ def test_present_true_and_file_on_disk_does_count(tmp_path):
     (tmp_path / "labels").mkdir()
     (tmp_path / "manifest.json").write_text(json.dumps({"clips": clips}))
     (tmp_path / "labels" / "l0.json").write_text(
-        json.dumps({"clip_id": "c_real", "coach_id": "coach_a"})
+        json.dumps({
+            "clip_id": "c_real",
+            "coach_id": "coach_a",
+            "events": {name: {"t_ms": 100} for name in EVENTS["release"]},
+            "cues": {name: {"value": 1.0, "disputed": False} for name in CUES["release"]},
+        })
     )
     p = gates.get_progress(tmp_path)
     assert p["wr_labeled"] == 1
