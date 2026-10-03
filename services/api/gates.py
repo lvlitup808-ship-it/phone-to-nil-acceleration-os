@@ -75,7 +75,14 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     overlap = sum(1 for cid, who in coaches.items() if cid not in disputed and len(who) >= 2)
 
     def distinct(rows: list[dict[str, Any]], key: str) -> int:
-        return len({r[key] for r in rows if r.get(key)})
+        values: set[Any] = set()
+        for row in rows:
+            raw = row.get(key)
+            if isinstance(raw, str):
+                raw = raw.strip()
+            if raw:
+                values.add(raw)
+        return len(values)
 
     return {
         "wr_labeled": len(wr),
