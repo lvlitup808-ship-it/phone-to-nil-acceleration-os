@@ -1,5 +1,7 @@
 # Audit baseline — 2026-09-25
 
+Live contract: NIL p25/p50/p75 are null. This file is not a band.
+
 Captured on `main` @ `373a48a` before any change in this audit pass. Nothing was fixed before this file was written.
 
 Environment: Linux container, Python 3.11.15, clean clone, `pip install -e ".[dev]"`.

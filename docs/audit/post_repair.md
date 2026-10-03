@@ -1,5 +1,7 @@
 # Audit post-repair — 2026-09-25
 
+Live contract: NIL p25/p50/p75 are null. This file is not a band.
+
 Re-ran every Step 1 check on the repair branch (`claude/audit-repair-phone-to-nil-fwxhss`). Compare with
 [`baseline.md`](baseline.md). Open items: [`open_questions.md`](open_questions.md).
 
