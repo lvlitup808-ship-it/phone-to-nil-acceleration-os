@@ -38,19 +38,20 @@ def test_pose_api_additive():
     assert not [k for k in body if k.endswith("_score")]
 
 
-def test_golden_harness_prints_honesty_line_and_writes_pending_report(tmp_path, capsys):
+def test_golden_harness_prints_honesty_line_and_refuses_write_while_pending(tmp_path, capsys):
     from services.golden_set.harness import HONESTY_LINE, main
 
     out = tmp_path / "slice2_report.md"
-    assert main(["--write", "--out", str(out)]) == 0
-    printed = capsys.readouterr().out
+    assert main(["--write", "--out", str(out)]) == 2
+    captured = capsys.readouterr()
+    printed = captured.out
     assert HONESTY_LINE in printed
     assert "do not treat this as athlete validation" in printed.lower()
-    text = out.read_text()
-    assert text == printed
-    assert "golden_set: pending" in text
-    assert "real_mp4_present: false" in text
-    assert "MAE" not in text.replace("No athlete-film MAE is published", "")
+    assert "golden_set: pending" in printed
+    assert "real_mp4_present: false" in printed
+    assert "MAE" not in printed.replace("No athlete-film MAE is published", "")
+    assert "refusing --write" in captured.err
+    assert not out.exists()
 
 
 def test_committed_report_matches_harness():
