@@ -62,12 +62,14 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
             continue
         label = _load_json(path) or {}
         cid = str(label.get("clip_id", ""))
-        if cid not in filmed or label.get("excluded") or not label.get("coach_id"):
+        coach = label.get("coach_id")
+        coach = coach.strip() if isinstance(coach, str) else ""
+        if cid not in filmed or label.get("excluded") or not coach:
             continue
         if label.get("disputed") or filmed[cid].get("disputed"):
             disputed.add(cid)
             continue
-        coaches.setdefault(cid, set()).add(str(label.get("coach_id", "")))
+        coaches.setdefault(cid, set()).add(coach)
 
     labeled = [filmed[cid] for cid in coaches if cid not in disputed]
     wr = [c for c in labeled if c.get("position_target") == "WR"]
