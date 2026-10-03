@@ -66,9 +66,7 @@ def _complete_label(label: dict[str, Any], clip: dict[str, Any]) -> bool:
     cues = label.get("cues")
     if not isinstance(events, dict) or set(events) != set(EVENTS[movement]):
         return False
-    if not isinstance(cues, dict) or set(cues) != set(CUES[movement]):
-        return False
-    return True
+    return isinstance(cues, dict) and set(cues) == set(CUES[movement])
 
 
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
