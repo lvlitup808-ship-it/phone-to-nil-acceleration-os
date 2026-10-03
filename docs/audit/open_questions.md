@@ -1,5 +1,7 @@
 # Audit open questions (P3 — not fixed in this pass)
 
+Live contract: NIL p25/p50/p75 are null. This file is not a band.
+
 Each item needs real film, a real coach, a hardware benchmark, or a product / legal decision. None was
 guessed. Owners are roles; the repo has one CODEOWNER, so "owner" means the person who plays that role.
 
