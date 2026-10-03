@@ -28,7 +28,7 @@
 3. Biomechanics — 3–5 prioritized cues
 4. Decision — Jev choice/score for cue rank and position fit
 5. Evidence — RAG over drills, comps, legal text
-6. Valuation — ranges only
+6. Valuation — ranges only. Live contract: NIL p25/p50/p75 are null. They stay null until the golden-set gate opens. This file is not a band.
 7. Distribution — share card, roster, collective API
 
 ## Data stores
