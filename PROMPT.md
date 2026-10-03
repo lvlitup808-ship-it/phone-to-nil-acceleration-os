@@ -9,3 +9,4 @@ Ingested extras (user-provided X posts):
 - Production RAG as Retrieve → Judge → Filter → Assemble → Generate → Verify
 
 See docs/attachments/x-posts.md.
+Live contract: NIL p25/p50/p75 are null. This file is not a band. Do not invent dollars, percentiles, MAE, or a composite.
