@@ -5,13 +5,14 @@ While no real, coach-labeled film exists this runs in fixture mode: poses are
 synthetic and nothing here measures accuracy against a coach.
 
     python -m services.golden_set.harness          # print only
-    python -m services.golden_set.harness --write  # also rewrite docs/validation/slice2_report.md
+    python -m services.golden_set.harness --write  # rewrite the report only if golden_set is ready and real film is on disk
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -57,14 +58,28 @@ def build_report(manifest_path: Path = MANIFEST) -> str:
     return "\n".join(lines) + "\n"
 
 
+def write_blocked(manifest: dict[str, Any], root: Path = MANIFEST.parent) -> str | None:
+    """Return a refusal reason, or None when --write may stamp the report."""
+    if manifest.get("golden_set") != "ready":
+        return "golden_set is not ready"
+    if not real_mp4_present(manifest, root):
+        return "no real film on disk"
+    return None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--write", action="store_true", help="rewrite docs/validation/slice2_report.md")
     parser.add_argument("--out", type=Path, default=REPORT)
     args = parser.parse_args(argv)
+    manifest = json.loads(MANIFEST.read_text())
     text = build_report()
     print(text, end="")
     if args.write:
+        reason = write_blocked(manifest)
+        if reason:
+            print(f"refusing --write: {reason}", file=sys.stderr)
+            return 2
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(text)
     return 0
