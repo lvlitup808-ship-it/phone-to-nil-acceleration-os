@@ -1,4 +1,5 @@
 name: Attachments
+# Live contract: NIL p25/p50/p75 are null. Do not echo a dollar, MAE, or composite.
 on:
   pull_request:
     paths: ["docs/attachments/**"]
