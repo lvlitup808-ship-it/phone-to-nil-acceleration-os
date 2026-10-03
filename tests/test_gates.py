@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from services.api import app as app_module
 from services.api import gates
 from services.api.app import app
+from services.golden_set.labels import CUES, EVENTS
 
 client = TestClient(app)
 
@@ -50,14 +51,19 @@ def test_fixture_labels_without_film_never_count(tmp_path):
 def test_real_labels_count_and_inter_rater(tmp_path):
     clips = [
         {
-            "clip_id": f"c{i}", "position_target": "WR", "athlete_id": f"ath_{i}",
+            "clip_id": f"c{i}", "position_target": "WR", "movement": "release",
+            "athlete_id": f"ath_{i}",
             "camera_side": {"path": f"clips/c{i}.mp4", "present": True},
         }
         for i in range(5)
     ]
-    labels = [{"clip_id": f"c{i}", "coach_id": "a"} for i in range(5)]
-    labels += [{"clip_id": f"c{i}", "coach_id": "b"} for i in range(4)]
-    labels += [{"clip_id": "c4", "coach_id": "b", "disputed": True}]
+    complete = {
+        "events": {name: {"t_ms": 100} for name in EVENTS["release"]},
+        "cues": {name: {"value": 1.0, "disputed": False} for name in CUES["release"]},
+    }
+    labels = [{"clip_id": f"c{i}", "coach_id": "a", **complete} for i in range(5)]
+    labels += [{"clip_id": f"c{i}", "coach_id": "b", **complete} for i in range(4)]
+    labels += [{"clip_id": "c4", "coach_id": "b", "disputed": True, **complete}]
     p = gates.get_progress(_golden_dir(tmp_path, clips, labels))
     assert p["wr_labeled"] == 4
     assert p["disputed"] == 1

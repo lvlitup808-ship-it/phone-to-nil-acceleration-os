@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 
 from services.api import gates
+from services.golden_set.labels import CUES, EVENTS
 
 
 def test_blank_diversity_fields_do_not_count(tmp_path):
@@ -19,6 +20,7 @@ def test_blank_diversity_fields_do_not_count(tmp_path):
     clip = {
         "clip_id": "c1",
         "position_target": "WR",
+        "movement": "release",
         "athlete_id": "   ",
         "surface": " ",
         "lighting": "",
@@ -26,7 +28,12 @@ def test_blank_diversity_fields_do_not_count(tmp_path):
     }
     (tmp_path / "manifest.json").write_text(json.dumps({"clips": [clip]}))
     (tmp_path / "labels" / "l0.json").write_text(
-        json.dumps({"clip_id": "c1", "coach_id": "coach_a"})
+        json.dumps({
+            "clip_id": "c1",
+            "coach_id": "coach_a",
+            "events": {name: {"t_ms": 100} for name in EVENTS["release"]},
+            "cues": {name: {"value": 1.0, "disputed": False} for name in CUES["release"]},
+        })
     )
     progress = gates.get_progress(tmp_path)
     assert progress["wr_labeled"] == 1

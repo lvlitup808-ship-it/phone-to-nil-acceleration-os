@@ -6,8 +6,10 @@ and the diversity mix in docs/film_first.md (3 surfaces, 2 lighting, 3 athletes
 per position).
 
 Progress is derived from data/golden_set/: a label counts only when its clip is
-in the manifest, at least one camera file for that clip exists on disk, and the
-label is neither excluded nor disputed. Fixture entries (no film) never count.
+in the manifest, at least one camera file for that clip exists on disk, the
+label is neither excluded nor disputed, and it has the five events and six
+frozen cues for the clip's movement. A stub file is not a coach label.
+Fixture entries (no film) never count.
 """
 
 from __future__ import annotations
@@ -15,6 +17,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
+
+from services.golden_set.labels import CUES, EVENTS
 
 ROOT = Path(__file__).resolve().parents[2]
 GOLDEN_DIR = ROOT / "data/golden_set"
@@ -49,6 +53,22 @@ def has_film(clip: dict[str, Any], root: Path) -> bool:
     return False
 
 
+def _complete_label(label: dict[str, Any], clip: dict[str, Any]) -> bool:
+    """A gate-counting label has the movement's events and frozen cues.
+
+    POST /golden/labels already rejects incomplete saves. Hand-written files
+    under labels/ must not open the gate by skipping that check.
+    """
+    movement = clip.get("movement")
+    if movement not in EVENTS:
+        return False
+    events = label.get("events")
+    cues = label.get("cues")
+    if not isinstance(events, dict) or set(events) != set(EVENTS[movement]):
+        return False
+    return isinstance(cues, dict) and set(cues) == set(CUES[movement])
+
+
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     manifest = _load_json(golden_dir / "manifest.json") or {}
     clips = {c["clip_id"]: c for c in manifest.get("clips", []) if "clip_id" in c}
@@ -65,6 +85,8 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
         coach = label.get("coach_id")
         coach = coach.strip() if isinstance(coach, str) else ""
         if cid not in filmed or label.get("excluded") or not coach:
+            continue
+        if not _complete_label(label, filmed[cid]):
             continue
         if label.get("disputed") or filmed[cid].get("disputed"):
             disputed.add(cid)

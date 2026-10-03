@@ -71,10 +71,15 @@ def test_check_reports_errors(tmp_path):
 
 def test_gate_counts_diversity_from_manifest_fields(tmp_path):
     from services.api import gates
+    from services.golden_set.labels import CUES, EVENTS
 
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
     clips = []
+    complete = {
+        "events": {name: {"t_ms": 100} for name in EVENTS["release"]},
+        "cues": {name: {"value": 1.0, "disputed": False} for name in CUES["release"]},
+    }
     for i, (surface, lighting) in enumerate([("turf", "daylight"), ("grass", "night_lit"), ("track", "daylight")]):
         cid = f"clp_010{i}"
         (tmp_path / "clips" / f"{cid}_side.mp4").write_bytes(b"x")
@@ -83,7 +88,9 @@ def test_gate_counts_diversity_from_manifest_fields(tmp_path):
             "surface": surface, "lighting": lighting,
             "camera_side": {"path": f"clips/{cid}_side.mp4", "fps": 60, "present": True},
         })
-        (tmp_path / "labels" / f"{cid}.json").write_text(json.dumps({"clip_id": cid, "coach_id": "coach_001"}))
+        (tmp_path / "labels" / f"{cid}.json").write_text(
+            json.dumps({"clip_id": cid, "coach_id": "coach_001", **complete})
+        )
     manifest = {"golden_set": "pending", "clips": clips}
     GoldenManifest.model_validate(manifest)
     (tmp_path / "manifest.json").write_text(json.dumps(manifest))
