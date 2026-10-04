@@ -9,7 +9,8 @@ Progress is derived from data/golden_set/: a label counts only when its clip is
 in the manifest, at least one camera file for that clip exists on disk, the
 label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label.
-Fixture entries (no film) never count. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. A resolved camera file backs at most one
+clip, so two clip ids cannot share one film. Coach, athlete, surface, and lighting
 ids are compared case-insensitively so spelling variants cannot inflate progress.
 """
 
@@ -50,15 +51,22 @@ def _load_json(path: Path) -> dict[str, Any] | None:
         return None
 
 
-def has_film(clip: dict[str, Any], root: Path) -> bool:
+def film_files(clip: dict[str, Any], root: Path) -> list[Path]:
+    """Resolved camera files under root that this clip claims are present."""
+    found: list[Path] = []
+    root_resolved = root.resolve()
     for key in ("camera_side", "camera_45"):
         cam = clip.get(key) or {}
         if not (cam.get("present") and cam.get("path")):
             continue
         path = (root / cam["path"]).resolve()
-        if path.is_relative_to(root.resolve()) and path.is_file():
-            return True
-    return False
+        if path.is_relative_to(root_resolved) and path.is_file() and path not in found:
+            found.append(path)
+    return found
+
+
+def has_film(clip: dict[str, Any], root: Path) -> bool:
+    return bool(film_files(clip, root))
 
 
 def _event_stamped(event: Any) -> bool:
@@ -102,7 +110,17 @@ def _complete_label(label: dict[str, Any], clip: dict[str, Any]) -> bool:
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     manifest = _load_json(golden_dir / "manifest.json") or {}
     clips = {c["clip_id"]: c for c in manifest.get("clips", []) if "clip_id" in c}
-    filmed = {cid: c for cid, c in clips.items() if has_film(c, golden_dir)}
+    filmed_raw = {cid: c for cid, c in clips.items() if has_film(c, golden_dir)}
+    # One file is one clip. A later clip that reuses a resolved camera path does not count.
+    claimed: dict[Path, str] = {}
+    filmed: dict[str, dict[str, Any]] = {}
+    for cid, clip in filmed_raw.items():
+        files = film_files(clip, golden_dir)
+        if any(path in claimed for path in files):
+            continue
+        for path in files:
+            claimed[path] = cid
+        filmed[cid] = clip
 
     coaches: dict[str, set[str]] = {}
     disputed: set[str] = set()
