@@ -11,6 +11,8 @@ label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label.
 Fixture entries (no film) never count. Coach, athlete, surface, and lighting
 ids are compared case-insensitively so spelling variants cannot inflate progress.
+A labels/*.json that is not a JSON object is skipped, not counted, and must not
+crash the gate.
 """
 
 from __future__ import annotations
@@ -45,9 +47,14 @@ def _norm_token(raw: Any) -> str:
 
 def _load_json(path: Path) -> dict[str, Any] | None:
     try:
-        return json.loads(path.read_text())
+        loaded = json.loads(path.read_text())
     except (OSError, ValueError):
         return None
+    # A list, string, or number is not a label or a manifest. Returning it
+    # would crash .get and take GET /gates/golden down. A downed gate is not closed.
+    if not isinstance(loaded, dict):
+        return None
+    return loaded
 
 
 def has_film(clip: dict[str, Any], root: Path) -> bool:
