@@ -9,7 +9,8 @@ Progress is derived from data/golden_set/: a label counts only when its clip is
 in the manifest, at least one camera file for that clip exists on disk, the
 label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label.
-Fixture entries (no film) never count.
+Fixture entries (no film) never count. Coach, athlete, surface, and lighting
+ids are compared case-insensitively so spelling variants cannot inflate progress.
 """
 
 from __future__ import annotations
@@ -33,6 +34,13 @@ GOLDEN_SET_GATE = {
     "lighting_min": 2,
     "athletes_per_position_min": 3,
 }
+
+
+def _norm_token(raw: Any) -> str:
+    """Strip and casefold a string id. Non-strings are not identities."""
+    if not isinstance(raw, str):
+        return ""
+    return raw.strip().casefold()
 
 
 def _load_json(path: Path) -> dict[str, Any] | None:
@@ -104,8 +112,7 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
             continue
         label = _load_json(path) or {}
         cid = str(label.get("clip_id", ""))
-        coach = label.get("coach_id")
-        coach = coach.strip() if isinstance(coach, str) else ""
+        coach = _norm_token(label.get("coach_id"))
         if cid not in filmed or label.get("excluded") or not coach:
             continue
         if not _complete_label(label, filmed[cid]):
@@ -125,7 +132,7 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
         for row in rows:
             raw = row.get(key)
             if isinstance(raw, str):
-                raw = raw.strip()
+                raw = _norm_token(raw)
             if raw:
                 values.add(raw)
         return len(values)
