@@ -53,11 +53,30 @@ def has_film(clip: dict[str, Any], root: Path) -> bool:
     return False
 
 
+def _timed_event(raw: Any) -> bool:
+    """Match EventLabel: a non-negative integer millisecond, not a bare key."""
+    if not isinstance(raw, dict):
+        return False
+    t_ms = raw.get("t_ms")
+    return isinstance(t_ms, int) and not isinstance(t_ms, bool) and t_ms >= 0
+
+
+def _valued_or_disputed_cue(raw: Any) -> bool:
+    """Match CueLabel: a number, or an explicit disputed flag when unsure."""
+    if not isinstance(raw, dict):
+        return False
+    if raw.get("disputed") is True:
+        return True
+    value = raw.get("value")
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
 def _complete_label(label: dict[str, Any], clip: dict[str, Any]) -> bool:
     """A gate-counting label has the movement's events and frozen cues.
 
-    POST /golden/labels already rejects incomplete saves. Hand-written files
-    under labels/ must not open the gate by skipping that check.
+    POST /golden/labels already rejects incomplete saves and empty event or
+    cue objects. Hand-written files under labels/ must not open the gate by
+    listing the right keys with no t_ms and no cue value.
     """
     movement = clip.get("movement")
     if movement not in EVENTS:
@@ -66,7 +85,11 @@ def _complete_label(label: dict[str, Any], clip: dict[str, Any]) -> bool:
     cues = label.get("cues")
     if not isinstance(events, dict) or set(events) != set(EVENTS[movement]):
         return False
-    return isinstance(cues, dict) and set(cues) == set(CUES[movement])
+    if not isinstance(cues, dict) or set(cues) != set(CUES[movement]):
+        return False
+    return all(_timed_event(raw) for raw in events.values()) and all(
+        _valued_or_disputed_cue(raw) for raw in cues.values()
+    )
 
 
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
