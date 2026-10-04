@@ -9,7 +9,9 @@ Progress is derived from data/golden_set/: a label counts only when its clip is
 in the manifest, at least one camera file for that clip exists on disk, the
 label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label.
-Fixture entries (no film) never count. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. Two clips that resolve to the same
+film bytes (shared path, path alias, or symlink) count once: the first
+manifest clip that owns the file. Coach, athlete, surface, and lighting
 ids are compared case-insensitively so spelling variants cannot inflate progress.
 """
 
@@ -50,15 +52,22 @@ def _load_json(path: Path) -> dict[str, Any] | None:
         return None
 
 
-def has_film(clip: dict[str, Any], root: Path) -> bool:
+def film_paths(clip: dict[str, Any], root: Path) -> list[Path]:
+    """Resolved on-disk camera files for a clip. Empty if present is a lie."""
+    found: list[Path] = []
+    root_resolved = root.resolve()
     for key in ("camera_side", "camera_45"):
         cam = clip.get(key) or {}
         if not (cam.get("present") and cam.get("path")):
             continue
         path = (root / cam["path"]).resolve()
-        if path.is_relative_to(root.resolve()) and path.is_file():
-            return True
-    return False
+        if path.is_relative_to(root_resolved) and path.is_file():
+            found.append(path)
+    return found
+
+
+def has_film(clip: dict[str, Any], root: Path) -> bool:
+    return bool(film_paths(clip, root))
 
 
 def _event_stamped(event: Any) -> bool:
@@ -102,7 +111,14 @@ def _complete_label(label: dict[str, Any], clip: dict[str, Any]) -> bool:
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     manifest = _load_json(golden_dir / "manifest.json") or {}
     clips = {c["clip_id"]: c for c in manifest.get("clips", []) if "clip_id" in c}
-    filmed = {cid: c for cid, c in clips.items() if has_film(c, golden_dir)}
+    filmed: dict[str, dict[str, Any]] = {}
+    seen_film: set[Path] = set()
+    for cid, clip in clips.items():
+        paths = film_paths(clip, golden_dir)
+        if not paths or any(path in seen_film for path in paths):
+            continue
+        seen_film.update(paths)
+        filmed[cid] = clip
 
     coaches: dict[str, set[str]] = {}
     disputed: set[str] = set()
