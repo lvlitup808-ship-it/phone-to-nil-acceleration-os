@@ -2,7 +2,7 @@
 
 1. Open an issue (`bug`, `feature`, `attachment`, `model`, or `legal`).
 2. Branch from `main`: `feat/<slug>` or `fix/<slug>`.
-3. NIL copy must stay a range + assumptions + disclaimer.
+3. NIL copy must stay a range + assumptions + disclaimer. p25/p50/p75 stay null and status stays blocked_on_golden_set until the golden-set gate opens. Do not invent dollars, percentiles, MAE, or a composite.
 4. Bounded decisions go through `packages/judgment`. Generation + RAG stay in `packages/evidence`.
 5. Do not commit athlete video, PII, or API keys.
 6. Claude Code sessions in this repo load the [Superpowers](https://github.com/obra/superpowers) plugin
