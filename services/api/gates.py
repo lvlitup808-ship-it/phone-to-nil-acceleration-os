@@ -12,6 +12,8 @@ frozen cues for the clip's movement. A stub file is not a coach label. A labels 
 is skipped, not counted, and must not crash the gate.
 Fixture entries (no film) never count. Coach, athlete, surface, and lighting
 ids are compared case-insensitively so spelling variants cannot inflate progress.
+When the manifest declares labeling_protocol_version, a label counts only if it
+carries that same stamp. A missing or other protocol is not a coach label.
 """
 
 from __future__ import annotations
@@ -100,6 +102,23 @@ def _complete_label(label: dict[str, Any], clip: dict[str, Any]) -> bool:
     return all(_cue_answered(cues[name]) for name in CUES[movement])
 
 
+
+def _protocol_ok(label: dict[str, Any], manifest: dict[str, Any]) -> bool:
+    """Count a label only under the protocol the manifest declares.
+
+    POST /golden/labels stamps labeling_protocol_version. Hand-written files
+    that omit the stamp, or name another protocol, must not open the gate.
+    A manifest with no protocol declared does not add this check.
+    """
+    expected = manifest.get("labeling_protocol_version")
+    if not isinstance(expected, str) or not expected.strip():
+        return True
+    got = label.get("labeling_protocol_version")
+    if not isinstance(got, str):
+        return False
+    return got.strip() == expected.strip()
+
+
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     manifest = _load_json(golden_dir / "manifest.json") or {}
     clips = {c["clip_id"]: c for c in manifest.get("clips", []) if "clip_id" in c}
@@ -119,6 +138,8 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
         if cid not in filmed or label.get("excluded") or not coach:
             continue
         if not _complete_label(label, filmed[cid]):
+            continue
+        if not _protocol_ok(label, manifest):
             continue
         if label.get("disputed") or filmed[cid].get("disputed"):
             disputed.add(cid)
