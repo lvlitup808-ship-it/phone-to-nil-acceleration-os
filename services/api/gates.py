@@ -10,7 +10,10 @@ in the manifest, at least one camera file for that clip exists on disk, the
 label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label. A labels file that is not a JSON object
 is skipped, not counted, and must not crash the gate.
-Fixture entries (no film) never count. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. A present flag is film only when the
+path is a non-empty video file directly under clips/ (.mp4 or .mov). A JSON
+file, a label file, or a zero-byte placeholder is not a phone clip.
+Coach, athlete, surface, and lighting
 ids are compared case-insensitively so spelling variants cannot inflate progress.
 """
 
@@ -52,12 +55,30 @@ def _load_json(path: Path) -> dict[str, Any] | None:
 
 
 def has_film(clip: dict[str, Any], root: Path) -> bool:
+    """True only for a non-empty video file directly under root/clips.
+
+    present:true is not enough. A path at manifest.json, labels/*.json, or an
+    empty clips/*.mp4 must not let a hand-written label open the gate.
+    """
+    root_resolved = root.resolve()
+    clips_dir = (root_resolved / "clips").resolve()
     for key in ("camera_side", "camera_45"):
         cam = clip.get(key) or {}
         if not (cam.get("present") and cam.get("path")):
             continue
-        path = (root / cam["path"]).resolve()
-        if path.is_relative_to(root.resolve()) and path.is_file():
+        raw = cam["path"]
+        if not isinstance(raw, str) or not raw:
+            continue
+        path = (root / raw).resolve()
+        try:
+            path.relative_to(clips_dir)
+        except ValueError:
+            continue
+        if path.parent != clips_dir:
+            continue
+        if path.suffix.lower() not in {".mp4", ".mov"}:
+            continue
+        if path.is_file() and path.stat().st_size > 0:
             return True
     return False
 
