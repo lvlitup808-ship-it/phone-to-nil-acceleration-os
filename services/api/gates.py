@@ -111,6 +111,10 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
         if path.name.startswith("_"):
             continue
         label = _load_json(path) or {}
+        # Arrays and strings are not coach labels. Skipping them keeps
+        # GET /gates/golden from 500ing and stops junk files from counting.
+        if not isinstance(label, dict):
+            continue
         cid = str(label.get("clip_id", ""))
         coach = _norm_token(label.get("coach_id"))
         if cid not in filmed or label.get("excluded") or not coach:
