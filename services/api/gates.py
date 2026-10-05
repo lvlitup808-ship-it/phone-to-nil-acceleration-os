@@ -14,6 +14,8 @@ Fixture entries (no film) never count. camera present must be JSON true; 1 and "
 ids are compared case-insensitively so spelling variants cannot inflate progress.
 When the manifest declares labeling_protocol_version, a label counts only if it
 carries that same stamp. A missing or other protocol is not a coach label.
+Only WR and DB clips count toward labeled totals, inter-rater, and the
+surface / lighting mix. An RB, OL, or other position cannot fill those bars.
 """
 
 from __future__ import annotations
@@ -150,7 +152,14 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     labeled = [filmed[cid] for cid in coaches if cid not in disputed]
     wr = [c for c in labeled if c.get("position_target") == "WR"]
     db = [c for c in labeled if c.get("position_target") == "DB"]
-    overlap = sum(1 for cid, who in coaches.items() if cid not in disputed and len(who) >= 2)
+    counted = wr + db
+    overlap = sum(
+        1
+        for cid, who in coaches.items()
+        if cid not in disputed
+        and len(who) >= 2
+        and filmed[cid].get("position_target") in ("WR", "DB")
+    )
 
     def distinct(rows: list[dict[str, Any]], key: str) -> int:
         values: set[Any] = set()
@@ -168,8 +177,8 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
         "inter_rater_done": overlap >= GOLDEN_SET_GATE["inter_rater_clips_min"],
         "disputed": len(disputed),
         "inter_rater_clips": overlap,
-        "surfaces": distinct(labeled, "surface"),
-        "lighting_conditions": distinct(labeled, "lighting"),
+        "surfaces": distinct(counted, "surface"),
+        "lighting_conditions": distinct(counted, "lighting"),
         "wr_athletes": distinct(wr, "athlete_id"),
         "db_athletes": distinct(db, "athlete_id"),
     }
