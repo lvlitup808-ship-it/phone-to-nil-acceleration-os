@@ -8,7 +8,8 @@ per position).
 Progress is derived from data/golden_set/: a label counts only when its clip is
 in the manifest, at least one camera file for that clip exists on disk, the
 label is neither excluded nor disputed, and it has the five events and six
-frozen cues for the clip's movement. A stub file is not a coach label.
+frozen cues for the clip's movement. A stub file is not a coach label. A labels file that is not a JSON object
+is skipped, not counted, and must not crash the gate.
 Fixture entries (no film) never count. Coach, athlete, surface, and lighting
 ids are compared case-insensitively so spelling variants cannot inflate progress.
 """
@@ -110,7 +111,9 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     for path in sorted(labels_dir.glob("*.json")) if labels_dir.is_dir() else []:
         if path.name.startswith("_"):
             continue
-        label = _load_json(path) or {}
+        label = _load_json(path)
+        if not isinstance(label, dict):
+            continue
         cid = str(label.get("clip_id", ""))
         coach = _norm_token(label.get("coach_id"))
         if cid not in filmed or label.get("excluded") or not coach:
