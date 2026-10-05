@@ -11,7 +11,7 @@ label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label. A labels file that is not a JSON object
 is skipped, not counted, and must not crash the gate.
 Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. Coach, athlete, surface, and lighting
-ids are compared case-insensitively so spelling variants cannot inflate progress.
+ids are compared case-insensitively so spelling variants cannot inflate progress. Only non-empty strings count; a number is not a surface, a lighting condition, or an athlete.
 When the manifest declares labeling_protocol_version, a label counts only if it
 carries that same stamp. A missing or other protocol is not a coach label.
 Only WR and DB clips count toward labeled totals, inter-rater, and the
@@ -162,13 +162,11 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     )
 
     def distinct(rows: list[dict[str, Any]], key: str) -> int:
-        values: set[Any] = set()
+        values: set[str] = set()
         for row in rows:
-            raw = row.get(key)
-            if isinstance(raw, str):
-                raw = _norm_token(raw)
-            if raw:
-                values.add(raw)
+            token = _norm_token(row.get(key))
+            if token:
+                values.add(token)
         return len(values)
 
     return {
