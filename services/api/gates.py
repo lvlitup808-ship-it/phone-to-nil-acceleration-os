@@ -10,7 +10,7 @@ in the manifest, at least one camera file for that clip exists on disk, the
 label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label. A labels file that is not a JSON object
 is skipped, not counted, and must not crash the gate.
-Fixture entries (no film) never count. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. present must be boolean True; the strings "true" and "false" are not film. Coach, athlete, surface, and lighting
 ids are compared case-insensitively so spelling variants cannot inflate progress.
 When the manifest declares labeling_protocol_version, a label counts only if it
 carries that same stamp. A missing or other protocol is not a coach label.
@@ -54,9 +54,14 @@ def _load_json(path: Path) -> dict[str, Any] | None:
 
 
 def has_film(clip: dict[str, Any], root: Path) -> bool:
+    """Film is a file on disk whose camera present flag is boolean True.
+
+    A string such as "false" or "true" is truthy in Python. Hand-edited
+    manifests must not open the gate that way.
+    """
     for key in ("camera_side", "camera_45"):
         cam = clip.get(key) or {}
-        if not (cam.get("present") and cam.get("path")):
+        if cam.get("present") is not True or not cam.get("path"):
             continue
         path = (root / cam["path"]).resolve()
         if path.is_relative_to(root.resolve()) and path.is_file():
