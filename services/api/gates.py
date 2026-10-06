@@ -10,7 +10,7 @@ in the manifest, at least one camera file for that clip exists on disk, the
 label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label. A labels file that is not a JSON object
 is skipped, not counted, and must not crash the gate.
-Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A zero-byte file is not film. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A zero-byte file is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. Coach, athlete, surface, and lighting
 ids are compared case-insensitively so spelling variants cannot inflate progress.
 When the manifest declares labeling_protocol_version, a label counts only if it
 carries that same stamp. A missing or other protocol is not a coach label.
@@ -55,7 +55,10 @@ def _load_json(path: Path) -> dict[str, Any] | None:
         return None
 
 
-def has_film(clip: dict[str, Any], root: Path) -> bool:
+def _film_paths(clip: dict[str, Any], root: Path) -> list[Path]:
+    """Resolved non-empty camera files for this clip, inside the golden root."""
+    found: list[Path] = []
+    root_resolved = root.resolve()
     for key in ("camera_side", "camera_45"):
         cam = clip.get(key) or {}
         # Only JSON true counts. 1 and "true" are hand-edited lies, not film.
@@ -63,13 +66,13 @@ def has_film(clip: dict[str, Any], root: Path) -> bool:
             continue
         path = (root / cam["path"]).resolve()
         # Empty files are placeholders, not filmed clips.
-        if (
-            path.is_relative_to(root.resolve())
-            and path.is_file()
-            and path.stat().st_size > 0
-        ):
-            return True
-    return False
+        if path.is_relative_to(root_resolved) and path.is_file() and path.stat().st_size > 0:
+            found.append(path)
+    return found
+
+
+def has_film(clip: dict[str, Any], root: Path) -> bool:
+    return bool(_film_paths(clip, root))
 
 
 def _event_stamped(event: Any) -> bool:
@@ -130,7 +133,14 @@ def _protocol_ok(label: dict[str, Any], manifest: dict[str, Any]) -> bool:
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     manifest = _load_json(golden_dir / "manifest.json") or {}
     clips = {c["clip_id"]: c for c in manifest.get("clips", []) if "clip_id" in c}
-    filmed = {cid: c for cid, c in clips.items() if has_film(c, golden_dir)}
+    filmed: dict[str, dict[str, Any]] = {}
+    claimed: set[Path] = set()
+    for cid, clip in clips.items():
+        paths = _film_paths(clip, golden_dir)
+        if not paths or any(path in claimed for path in paths):
+            continue
+        claimed.update(paths)
+        filmed[cid] = clip
 
     coaches: dict[str, set[str]] = {}
     disputed: set[str] = set()
