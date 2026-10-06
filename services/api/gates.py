@@ -11,7 +11,8 @@ label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label. A labels file that is not a JSON object
 is skipped, not counted, and must not crash the gate.
 Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. Coach, athlete, surface, and lighting
-ids are compared case-insensitively so spelling variants cannot inflate progress.
+ids are compared case-insensitively, after NFKC and after dropping Unicode format
+characters, so spelling variants and zero-width marks cannot inflate progress.
 When the manifest declares labeling_protocol_version, a label counts only if it
 carries that same stamp. A missing or other protocol is not a coach label.
 Only WR and DB clips count toward labeled totals, inter-rater, and the
@@ -21,6 +22,7 @@ surface / lighting mix. An RB, OL, or other position cannot fill those bars.
 from __future__ import annotations
 
 import json
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -42,10 +44,14 @@ GOLDEN_SET_GATE = {
 
 
 def _norm_token(raw: Any) -> str:
-    """Strip and casefold a string id. Non-strings are not identities."""
+    """Strip, casefold, and drop format characters. Non-strings are not identities.
+
+    A zero-width mark must not split one coach or surface into two.
+    """
     if not isinstance(raw, str):
         return ""
-    return raw.strip().casefold()
+    folded = unicodedata.normalize("NFKC", raw).strip().casefold()
+    return "".join(ch for ch in folded if unicodedata.category(ch) != "Cf")
 
 
 def _load_json(path: Path) -> dict[str, Any] | None:
