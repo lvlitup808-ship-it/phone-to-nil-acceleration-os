@@ -10,7 +10,7 @@ in the manifest, at least one camera file for that clip exists on disk, the
 label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label. A labels file that is not a JSON object
 is skipped, not counted, and must not crash the gate.
-Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A zero-byte file is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A zero-byte file is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively so spelling variants cannot inflate progress.
 When the manifest declares labeling_protocol_version, a label counts only if it
 carries that same stamp. A missing or other protocol is not a coach label.
@@ -130,16 +130,32 @@ def _protocol_ok(label: dict[str, Any], manifest: dict[str, Any]) -> bool:
     return got.strip() == expected.strip()
 
 
+def _file_id(path: Path) -> tuple[int, int] | None:
+    """Device and inode. Hardlinks share this even when the path differs."""
+    try:
+        stat = path.stat()
+    except OSError:
+        return None
+    return (stat.st_dev, stat.st_ino)
+
+
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     manifest = _load_json(golden_dir / "manifest.json") or {}
     clips = {c["clip_id"]: c for c in manifest.get("clips", []) if "clip_id" in c}
     filmed: dict[str, dict[str, Any]] = {}
     claimed: set[Path] = set()
+    claimed_files: set[tuple[int, int]] = set()
     for cid, clip in clips.items():
         paths = _film_paths(clip, golden_dir)
-        if not paths or any(path in claimed for path in paths):
+        file_ids = {file_id for path in paths if (file_id := _file_id(path))}
+        if (
+            not paths
+            or any(path in claimed for path in paths)
+            or bool(file_ids & claimed_files)
+        ):
             continue
         claimed.update(paths)
+        claimed_files.update(file_ids)
         filmed[cid] = clip
 
     coaches: dict[str, set[str]] = {}
