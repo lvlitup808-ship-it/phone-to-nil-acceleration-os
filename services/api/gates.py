@@ -10,7 +10,7 @@ in the manifest, at least one camera file for that clip exists on disk, the
 label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label. A labels file that is not a JSON object
 is skipped, not counted, and must not crash the gate.
-Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A zero-byte file is not film. A directory is not film. A path that resolves outside the golden root is not film. A non-string path is not film and must not crash the gate. A symlink is not film, even when it points at a non-empty file inside the golden root. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively so spelling variants cannot inflate progress.
 When the manifest declares labeling_protocol_version, a label counts only if it
 carries that same stamp. A missing or other protocol is not a coach label.
@@ -62,9 +62,11 @@ def _film_paths(clip: dict[str, Any], root: Path) -> list[Path]:
     for key in ("camera_side", "camera_45"):
         cam = clip.get(key) or {}
         # Only JSON true counts. 1 and "true" are hand-edited lies, not film.
-        if cam.get("present") is not True or not cam.get("path"):
+        path_value = cam.get("path")
+        # Only a string path is a camera file. A list or number is a hand edit, not film.
+        if cam.get("present") is not True or not isinstance(path_value, str) or not path_value.strip():
             continue
-        raw = root / cam["path"]
+        raw = root / path_value
         # resolve() follows links. A symlink is not the clip on disk.
         if raw.is_symlink():
             continue
