@@ -10,7 +10,7 @@ in the manifest, at least one camera file for that clip exists on disk, the
 label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label. A labels file that is not a JSON object
 is skipped, not counted, and must not crash the gate.
-Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
 characters, so spelling variants and zero-width marks cannot inflate progress.
 A number or boolean is not an athlete, surface, or lighting condition.
@@ -79,9 +79,31 @@ def _film_paths(clip: dict[str, Any], root: Path) -> list[Path]:
             continue
         path = raw.resolve()
         # Empty files are placeholders, not filmed clips.
-        if path.is_relative_to(root_resolved) and path.is_file() and path.stat().st_size > 0:
-            found.append(path)
+        # A JSON, README, or notes file inside the golden root is not a clip.
+        # The intake contract is clips/<name>.mp4.
+        if not _is_camera_file(path, root_resolved):
+            continue
+        found.append(path)
     return found
+
+
+
+def _is_camera_file(path: Path, root_resolved: Path) -> bool:
+    """True only for a non-empty regular file at clips/<name>.mp4 under the golden root."""
+    if not path.is_relative_to(root_resolved) or not path.is_file():
+        return False
+    try:
+        relative = path.relative_to(root_resolved)
+    except ValueError:
+        return False
+    if relative.parts[:1] != ("clips",) or len(relative.parts) != 2:
+        return False
+    if relative.suffix.casefold() != ".mp4":
+        return False
+    try:
+        return path.stat().st_size > 0
+    except OSError:
+        return False
 
 
 def has_film(clip: dict[str, Any], root: Path) -> bool:
