@@ -12,7 +12,8 @@ frozen cues for the clip's movement. A stub file is not a coach label. A labels 
 is skipped, not counted, and must not crash the gate.
 Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
-characters, so spelling variants and zero-width marks cannot inflate progress.
+characters and combining marks, so spelling variants, zero-width marks, and
+combining dots cannot inflate progress.
 A number or boolean is not an athlete, surface, or lighting condition.
 When the manifest declares labeling_protocol_version, a label counts only if it
 carries that same stamp. A missing or other protocol is not a coach label.
@@ -45,14 +46,20 @@ GOLDEN_SET_GATE = {
 
 
 def _norm_token(raw: Any) -> str:
-    """Strip, casefold, and drop format characters. Non-strings are not identities.
+    """Strip, casefold, and drop format and combining marks. Non-strings are not identities.
 
-    A zero-width mark must not split one coach or surface into two.
+    A zero-width mark or a combining dot must not split one coach or surface into two.
     """
     if not isinstance(raw, str):
         return ""
     folded = unicodedata.normalize("NFKC", raw).strip().casefold()
-    return "".join(ch for ch in folded if unicodedata.category(ch) != "Cf")
+    # NFKC can precompose a combining mark. Decompose, then drop marks.
+    folded = unicodedata.normalize("NFD", folded)
+    return "".join(
+        ch
+        for ch in folded
+        if unicodedata.category(ch) != "Cf" and not unicodedata.category(ch).startswith("M")
+    )
 
 
 def _load_json(path: Path) -> dict[str, Any] | None:
