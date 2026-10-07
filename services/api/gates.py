@@ -49,17 +49,22 @@ def _norm_token(raw: Any) -> str:
     """Strip, casefold, and drop format and combining marks. Non-strings are not identities.
 
     A zero-width mark or a combining dot must not split one coach or surface into two.
+    After that, only ASCII letters, digits, underscore, and hyphen count. A Cyrillic
+    lookalike is not a second coach or a new surface.
     """
     if not isinstance(raw, str):
         return ""
     folded = unicodedata.normalize("NFKC", raw).strip().casefold()
     # NFKC can precompose a combining mark. Decompose, then drop marks.
     folded = unicodedata.normalize("NFD", folded)
-    return "".join(
+    token = "".join(
         ch
         for ch in folded
         if unicodedata.category(ch) != "Cf" and not unicodedata.category(ch).startswith("M")
     )
+    if not token or any(ch not in "abcdefghijklmnopqrstuvwxyz0123456789_-" for ch in token):
+        return ""
+    return token
 
 
 def _load_json(path: Path) -> dict[str, Any] | None:
