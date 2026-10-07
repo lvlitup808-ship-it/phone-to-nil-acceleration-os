@@ -14,6 +14,8 @@ Fixture entries (no film) never count. camera present must be JSON true; 1 and "
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
 characters, so spelling variants and zero-width marks cannot inflate progress.
 A number or boolean is not an athlete, surface, or lighting condition.
+A manifest clips value that is not a list, or a row that is not an object with
+a string clip_id, is skipped and must not crash the gate.
 When the manifest declares labeling_protocol_version, a label counts only if it
 carries that same stamp. A missing or other protocol is not a coach label.
 Only WR and DB clips count toward labeled totals, inter-rater, and the
@@ -154,7 +156,18 @@ def _file_id(path: Path) -> tuple[int, int] | None:
 
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     manifest = _load_json(golden_dir / "manifest.json") or {}
-    clips = {c["clip_id"]: c for c in manifest.get("clips", []) if "clip_id" in c}
+    raw_clips = manifest.get("clips")
+    clips: dict[str, dict[str, Any]] = {}
+    if isinstance(raw_clips, list):
+        for raw in raw_clips:
+            # A number, string, or null row is not a clip and must not raise.
+            # clip_id must be a string: a list id is unhashable and is not a key.
+            if not isinstance(raw, dict):
+                continue
+            cid = raw.get("clip_id")
+            if not isinstance(cid, str) or not cid.strip():
+                continue
+            clips[cid] = raw
     filmed: dict[str, dict[str, Any]] = {}
     claimed: set[Path] = set()
     claimed_files: set[tuple[int, int]] = set()
