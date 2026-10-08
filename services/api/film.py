@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -83,7 +84,8 @@ def revoke_consent(consent_id: str) -> dict[str, Any]:
 def share_link(body: ShareIn) -> dict[str, Any]:
     ttl = min(max(body.ttl_days, 1), 30)
     expires = datetime.now(UTC) + timedelta(days=ttl)
-    token = f"shr_{body.athlete_id}_{expires.strftime('%Y%m%d')}"
+    # Unique token. A date-scoped key revived a revoked link on same-day regrant.
+    token = f"shr_{uuid.uuid4().hex}"
     SHARE[token] = {
         "token": token,
         "athlete_id": body.athlete_id,
