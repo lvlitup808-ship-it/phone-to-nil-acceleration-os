@@ -12,11 +12,12 @@ frozen cues for the clip's movement. A stub file is not a coach label. A labels 
 is skipped, not counted, and must not crash the gate.
 A symlink under labels/ is not a coach label, even when it points at a real JSON file.
 A cue value of NaN or Infinity is not a measurement and does not complete a label.
-Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
 characters and combining marks, so spelling variants, zero-width marks, and
 combining dots cannot inflate progress.
 A number or boolean is not an athlete, surface, or lighting condition.
+A manifest that is not a JSON object, and a clip row that is not an object, are skipped. They must not crash the gate or count as film.
 When the manifest declares labeling_protocol_version, a label counts only if it
 carries that same stamp. A missing or other protocol is not a coach label.
 Only WR and DB clips count toward labeled totals, inter-rater, and the
@@ -80,6 +81,9 @@ def _film_paths(clip: dict[str, Any], root: Path) -> list[Path]:
         cam = clip.get(key) or {}
         # Only JSON true counts. 1 and "true" are hand-edited lies, not film.
         # A numeric or list path is not a file and must not raise.
+        # A string or list in the camera slot is not a camera object.
+        if not isinstance(cam, dict):
+            continue
         path_value = cam.get("path")
         if cam.get("present") is not True or not isinstance(path_value, str) or not path_value.strip():
             continue
@@ -190,8 +194,18 @@ def _file_id(path: Path) -> tuple[int, int] | None:
 
 
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
-    manifest = _load_json(golden_dir / "manifest.json") or {}
-    clips = {c["clip_id"]: c for c in manifest.get("clips", []) if "clip_id" in c}
+    loaded = _load_json(golden_dir / "manifest.json")
+    # A list or string is truthy, so `or {}` would not save the gate from .get.
+    manifest = loaded if isinstance(loaded, dict) else {}
+    raw_clips = manifest.get("clips", [])
+    clips: dict[str, dict[str, Any]] = {}
+    if isinstance(raw_clips, list):
+        for row in raw_clips:
+            if not isinstance(row, dict):
+                continue
+            cid = row.get("clip_id")
+            if isinstance(cid, str) and cid:
+                clips[cid] = row
     filmed: dict[str, dict[str, Any]] = {}
     claimed: set[Path] = set()
     claimed_files: set[tuple[int, int]] = set()
