@@ -11,6 +11,7 @@ label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label. A labels file that is not a JSON object
 is skipped, not counted, and must not crash the gate.
 A symlink under labels/ is not a coach label, even when it points at a real JSON file.
+A manifest clip that is not an object is skipped, not counted, and must not crash the gate. A camera_side or camera_45 that is not an object is not film and must not crash the gate.
 A cue value of NaN or Infinity is not a measurement and does not complete a label.
 Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
@@ -78,6 +79,9 @@ def _film_paths(clip: dict[str, Any], root: Path) -> list[Path]:
     root_resolved = root.resolve()
     for key in ("camera_side", "camera_45"):
         cam = clip.get(key) or {}
+        # A string or list is not a camera block and must not raise.
+        if not isinstance(cam, dict):
+            continue
         # Only JSON true counts. 1 and "true" are hand-edited lies, not film.
         # A numeric or list path is not a file and must not raise.
         path_value = cam.get("path")
@@ -191,7 +195,11 @@ def _file_id(path: Path) -> tuple[int, int] | None:
 
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     manifest = _load_json(golden_dir / "manifest.json") or {}
-    clips = {c["clip_id"]: c for c in manifest.get("clips", []) if "clip_id" in c}
+    clips = {
+        c["clip_id"]: c
+        for c in manifest.get("clips", [])
+        if isinstance(c, dict) and "clip_id" in c
+    }
     filmed: dict[str, dict[str, Any]] = {}
     claimed: set[Path] = set()
     claimed_files: set[tuple[int, int]] = set()
