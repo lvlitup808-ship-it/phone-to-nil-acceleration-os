@@ -15,6 +15,11 @@ client = TestClient(app)
 
 
 def test_same_day_regrant_does_not_revive_revoked_share_token() -> None:
+    granted = client.post(
+        "/consent",
+        json={"athlete_id": "ath_share_revive", "consent_scope": ["public"]},
+    )
+    assert granted.status_code == 200
     created = client.post(
         "/share-link",
         json={"athlete_id": "ath_share_revive", "recipient": "coach@x.test", "ttl_days": 7},

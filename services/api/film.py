@@ -39,10 +39,17 @@ class ShareIn(BaseModel):
     ttl_days: int = 30
 
 
+def _same_athlete(left: Any, right: Any) -> bool:
+    """Share cards and consent rows are the same athlete ignoring case and edge space."""
+    if not isinstance(left, str) or not isinstance(right, str):
+        return False
+    return left.strip().casefold() == right.strip().casefold() and bool(left.strip())
+
+
 def _purge_share_links(consent: dict[str, Any]) -> dict[str, int]:
     n = 0
     for row in SHARE.values():
-        if row["athlete_id"] == consent["athlete_id"] and not row["revoked"]:
+        if _same_athlete(row.get("athlete_id"), consent.get("athlete_id")) and not row["revoked"]:
             row["revoked"] = True
             n += 1
     return {"passport_share": n}
