@@ -14,7 +14,13 @@ from services.api.film import SHARE
 client = TestClient(app)
 
 
+def _grant_public(athlete_id: str) -> None:
+    res = client.post("/consent", json={"athlete_id": athlete_id, "consent_scope": ["public"]})
+    assert res.status_code == 200
+
+
 def test_same_day_regrant_does_not_revive_revoked_share_token() -> None:
+    _grant_public("ath_share_revive")
     created = client.post(
         "/share-link",
         json={"athlete_id": "ath_share_revive", "recipient": "coach@x.test", "ttl_days": 7},

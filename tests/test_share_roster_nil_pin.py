@@ -15,6 +15,11 @@ from services.api.app import app
 
 client = TestClient(app)
 
+
+def _grant_public(athlete_id: str) -> None:
+    res = client.post("/consent", json={"athlete_id": athlete_id, "consent_scope": ["public"]})
+    assert res.status_code == 200
+
 FORBIDDEN_KEYS = ("p25", "p50", "p75", "mae", "composite", "nil_dollars", "confidence")
 INVENTED = ("2500", "6000", "14000", "0.41")
 
@@ -24,6 +29,7 @@ def _blob(body: dict) -> str:
 
 
 def test_share_link_payload_has_no_nil_numbers():
+    _grant_public("ath_share_nil")
     body = client.post(
         "/share-link",
         json={"athlete_id": "ath_share_nil", "recipient": "coach@x.test", "ttl_days": 7},
@@ -37,6 +43,7 @@ def test_share_link_payload_has_no_nil_numbers():
 
 
 def test_revoked_share_link_still_has_no_nil_numbers():
+    _grant_public("ath_share_revoke")
     created = client.post(
         "/share-link",
         json={"athlete_id": "ath_share_revoke", "recipient": "coach@x.test", "ttl_days": 2},
