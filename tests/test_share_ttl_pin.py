@@ -9,12 +9,18 @@ from services.api.app import app
 client = TestClient(app)
 
 
+def _grant_public(athlete_id: str) -> None:
+    res = client.post("/consent", json={"athlete_id": athlete_id, "consent_scope": ["public"]})
+    assert res.status_code == 200
+
+
 def _expires(body: dict) -> datetime:
     raw = body["expires_at"]
     return datetime.fromisoformat(raw.replace("Z", "+00:00"))
 
 
 def test_share_link_requested_90_days_caps_at_30():
+    _grant_public("ath_ttl")
     before = datetime.now(UTC)
     body = client.post(
         "/share-link",
@@ -27,6 +33,7 @@ def test_share_link_requested_90_days_caps_at_30():
 
 
 def test_share_link_default_is_30_days():
+    _grant_public("ath_ttl_default")
     before = datetime.now(UTC)
     body = client.post(
         "/share-link",
@@ -38,6 +45,7 @@ def test_share_link_default_is_30_days():
 
 
 def test_share_link_zero_ttl_floors_at_one_day():
+    _grant_public("ath_ttl_floor")
     before = datetime.now(UTC)
     body = client.post(
         "/share-link",
