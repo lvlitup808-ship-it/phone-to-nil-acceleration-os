@@ -50,6 +50,7 @@ def test_standalone_valuation_service_never_returns_numbers():
     assert body["p50"] is None
     assert body["p75"] is None
     assert body.get("confidence") is None
-    assert body.get("status") == "schema_only"
+    assert body.get("status") == "blocked_on_golden_set"
     assert body.get("comp_cluster_ids", []) == []
+    assert body["p25"] is None
     assert "no comp dataset" in " ".join(body.get("assumptions", [])).lower()
