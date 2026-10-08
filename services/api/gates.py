@@ -20,6 +20,7 @@ non-ASCII letter is not an identity: a Cyrillic lookalike is not a second coach,
 athlete, surface, or lighting condition.
 A number or boolean is not an athlete, surface, or lighting condition.
 A manifest that is not a JSON object, and a clip row that is not an object, are skipped. They must not crash the gate or count as film.
+Clip ids are compared the same way as coach ids. A second row whose clip_id matches after strip, casefold, NFKC, and dropping format characters and combining marks is the same clip; the first row keeps the film. A label using that variant does not add a labeled clip.
 When the manifest declares labeling_protocol_version, a label counts only if it
 carries that same stamp. A missing or other protocol is not a coach label.
 Only WR and DB clips count toward labeled totals, inter-rater, and the
@@ -210,8 +211,9 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
         for row in raw_clips:
             if not isinstance(row, dict):
                 continue
-            cid = row.get("clip_id")
-            if isinstance(cid, str) and cid:
+            # Same identity rules as coach ids. A spaced or zero-width twin is not a second clip.
+            cid = _norm_token(row.get("clip_id"))
+            if cid and cid not in clips:
                 clips[cid] = row
     filmed: dict[str, dict[str, Any]] = {}
     claimed: set[Path] = set()
@@ -241,7 +243,7 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
         label = _load_json(path)
         if not isinstance(label, dict):
             continue
-        cid = str(label.get("clip_id", ""))
+        cid = _norm_token(label.get("clip_id"))
         coach = _norm_token(label.get("coach_id"))
         if cid not in filmed or label.get("excluded") or not coach:
             continue
