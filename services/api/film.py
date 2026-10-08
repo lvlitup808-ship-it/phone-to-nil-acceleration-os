@@ -82,6 +82,9 @@ def revoke_consent(consent_id: str) -> dict[str, Any]:
 
 @router.post("/share-link")
 def share_link(body: ShareIn) -> dict[str, Any]:
+    # Public share is default-off. Capture or coach scope is not a share card.
+    if not CONSENT.active_scopes(body.athlete_id).get("public"):
+        raise HTTPException(403, "public share scope required")
     ttl = min(max(body.ttl_days, 1), 30)
     expires = datetime.now(UTC) + timedelta(days=ttl)
     # Unique token. A date-scoped key revived a revoked link on same-day regrant.
