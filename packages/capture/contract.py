@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 
 
@@ -12,9 +13,10 @@ class IngestDecision:
 
 def validate_ingest(*, fps: float, duration_s: float, angles: list[str], stable_first_500ms: bool, pair_complete: bool | None = None) -> IngestDecision:
     reasons: list[str] = []
-    if fps < 30:
+    # NaN comparisons are always False, so a non-finite fps used to pass.
+    if not math.isfinite(fps) or fps < 30:
         reasons.append("fps_below_30")
-    if duration_s < 4 or duration_s > 12:
+    if not math.isfinite(duration_s) or duration_s < 4 or duration_s > 12:
         reasons.append("duration_not_4_to_12s")
     needed = {"side", "fortyfive"}
     have = {a.replace("45", "fortyfive") for a in angles}
