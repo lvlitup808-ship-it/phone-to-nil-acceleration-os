@@ -58,7 +58,7 @@ Every route below exists in `services/api/app.py` or `services/api/film.py`; `te
 | `POST /ingest/check` | film-first | Capture contract + filename check; reason codes in `docs/film_first/retake_templates.md` |
 | `POST /consent` | film-first | Grant consent scopes |
 | `POST /consent/{consent_id}/revoke` | film-first | Revoke, purge covered clips / pose debug / share links, signed receipt |
-| `POST /share-link` | film-first | Share link, TTL capped at 30 days |
+| `POST /share-link` | film-first | Share link, TTL capped at 30 days; 403 without an active `public` scope |
 | `POST /share-link/{token}/revoke` | film-first | Revoke a share link |
 | `GET /golden/assignments` | film-first | `data/golden_set/assignments.json` |
 | `GET /golden/labels/{clip_id}/spec` | film-first | Events and frozen cues a label for this clip must contain; 404 if not in the manifest |

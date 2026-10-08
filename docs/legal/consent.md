@@ -30,7 +30,7 @@ Consent lives in `packages/consent/store.py`, exposed by `POST /consent` and
 | ☐ Biomechanics analysis | `consent_scope` contains `capture` | Convention, not validated. |
 | ☐ Coach review | `consent_scope` contains `coach` | Convention, not validated. |
 | ☐ Improve the analysis system (unlabeled) | none agreed | **Open** — no scope string defined. |
-| ☐ Public sharing (default NO) | `consent_scope` contains `public` | Convention, not validated. |
+| ☐ Public sharing (default NO) | `consent_scope` contains `public` | `POST /share-link` returns 403 unless an unrevoked grant includes `public`. |
 | Items 3–5 above (recruiter API, share cards, authenticity disclosure) | none | **Open** — not on either paper form, not in code. |
 | "We delete video, measurements, reports within 30 days" | revoke purges clips, pose debug files, share links, and blanks assessments immediately; signed receipt with `deleted_counts` | In-memory store only; no object storage exists yet. |
 | "Not kept longer than 90 days" (minor form) | — | **Not enforced.** `docs/legal/data_retention.md` defers enforcement to Slice 3. |

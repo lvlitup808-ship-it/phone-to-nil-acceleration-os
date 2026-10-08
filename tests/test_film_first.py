@@ -44,6 +44,7 @@ def test_revoke_endpoint():
 
 
 def test_share_link_caps_ttl():
+    client.post("/consent", json={"athlete_id": "a1", "consent_scope": ["public"]})
     res = client.post("/share-link", json={"athlete_id": "a1", "recipient": "coach@x.test", "ttl_days": 90})
     assert res.status_code == 200
     assert "expires_at" in res.json()
@@ -62,7 +63,7 @@ def test_nil_scenarios_schema_only():
 
 def test_revoke_actually_deletes_what_the_receipt_lists(tmp_path, monkeypatch):
     monkeypatch.setenv("ARTIFACTS_DIR", str(tmp_path))
-    cid = client.post("/consent", json={"athlete_id": "rv1", "consent_scope": ["capture", "coach"]}).json()["consent_id"]
+    cid = client.post("/consent", json={"athlete_id": "rv1", "consent_scope": ["capture", "coach", "public"]}).json()["consent_id"]
     up = client.post("/upload", json={"athlete_id": "rv1", "angle": "side", "uri": "demo://rv", "consent_id": cid})
     assert up.status_code == 200
     pose = client.post(
