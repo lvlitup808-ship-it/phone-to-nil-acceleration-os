@@ -37,7 +37,7 @@ def _clip(clip_id: str, athlete: str, surface: str) -> dict:
 
 
 def _box(payload: bytes) -> bytes:
-    return b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00" + payload
+    return b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00" + (8 + len(payload)).to_bytes(4, "big") + b"mdat" + payload
 
 
 def _seed(tmp_path, first: bytes, second: bytes):

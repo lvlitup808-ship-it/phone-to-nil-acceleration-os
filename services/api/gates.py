@@ -14,7 +14,7 @@ A symlink under labels/ is not a coach label, even when it points at a real JSON
 A labels directory that is itself a symlink is not the coach-label store. A manifest.json that is a symlink is not the golden-set manifest, even when it points at a real JSON file.
 A golden-set directory that is itself a symlink is not the store on disk, even when the link target has a real manifest, labels, and film.
 A cue value of NaN or Infinity is not a measurement and does not complete a label.
-Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. A renamed text, JSON, or JPEG file is not film: bytes 4:8 must be the ftyp box. The letters ftyp later in the header are not a box. An ftyp box whose size field is 0, 1, under 16, not a multiple of 4, or larger than the file is not camera film. A major brand that is a box type name (mdat, moov, free, skip, wide, ftyp) is not a phone brand. A major brand that is not a phone brand (isom, iso2, mp41, mp42, avc1, mp71) is not camera film. A compatible brand after the minor version that is not one of those phone brands is not camera film either. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. A renamed text, JSON, or JPEG file is not film: bytes 4:8 must be the ftyp box. The letters ftyp later in the header are not a box. An ftyp box whose size field is 0, 1, under 16, not a multiple of 4, or larger than the file is not camera film. A major brand that is a box type name (mdat, moov, free, skip, wide, ftyp) is not a phone brand. A major brand that is not a phone brand (isom, iso2, mp41, mp42, avc1, mp71) is not camera film. An ftyp box with no mdat or moov after it is not camera film. free, skip, wide, or uuid may sit between them. A compatible brand after the minor version that is not one of those phone brands is not camera film either. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
 characters and combining marks, so spelling variants, zero-width marks, and
 combining dots cannot inflate progress. A token that still contains a
@@ -171,7 +171,38 @@ def _is_camera_file(path: Path, root_resolved: Path) -> bool:
     if len(body) < box_size:
         return False
     compatible = body[16:box_size]
-    return all(compatible[i : i + 4] in phone_brands for i in range(0, len(compatible), 4))
+    if not all(compatible[i : i + 4] in phone_brands for i in range(0, len(compatible), 4)):
+        return False
+    # A header is not a filmed clip. Phone files carry mdat or moov after ftyp.
+    # free, skip, wide, or uuid may sit between them. Notes are not a box.
+    return _has_media_box(path, file_size, box_size)
+
+
+def _has_media_box(path: Path, file_size: int, ftyp_size: int) -> bool:
+    """True when a later box is mdat or moov and every box size fits the file."""
+    offset = ftyp_size
+    try:
+        with path.open("rb") as handle:
+            while offset + 8 <= file_size:
+                handle.seek(offset)
+                header = handle.read(8)
+                if len(header) < 8:
+                    return False
+                size = int.from_bytes(header[:4], "big")
+                kind = header[4:8]
+                if size == 0:
+                    size = file_size - offset
+                # size 1 is a 64-bit largesize. A phone capture does not use it here.
+                if size == 1 or size < 8 or offset + size > file_size:
+                    return False
+                if kind in {b"mdat", b"moov"}:
+                    return True
+                if kind not in {b"free", b"skip", b"wide", b"uuid"}:
+                    return False
+                offset += size
+    except OSError:
+        return False
+    return False
 
 
 def has_film(clip: dict[str, Any], root: Path) -> bool:

@@ -25,7 +25,7 @@ def _label(clip_id: str, coach: str) -> dict:
 
 def _packet(directory) -> None:
     (directory / "clips").mkdir()
-    (directory / "clips" / "c1.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00film-not-a-fixture")
+    (directory / "clips" / "c1.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00\x00\x00\x00\x1amdatfilm-not-a-fixture")
     (directory / "labels").mkdir()
     (directory / "labels" / "c1_coach_a.json").write_text(
         json.dumps(_label("c1", "coach_a"))

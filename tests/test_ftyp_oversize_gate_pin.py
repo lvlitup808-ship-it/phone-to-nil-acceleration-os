@@ -53,5 +53,5 @@ def test_ftyp_box_size_max_does_not_count(tmp_path):
 
 
 def test_ftyp_box_that_fits_still_counts(tmp_path):
-    _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00film")
+    _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00\x00\x00\x00\x0cmdatfilm")
     assert gates.get_progress(tmp_path)["wr_labeled"] == 1

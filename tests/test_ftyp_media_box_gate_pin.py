@@ -1,8 +1,8 @@
-"""Honesty pin: an ftyp header without a major brand is not camera film.
+"""Honesty pin: an ftyp header with no media box is not camera film.
 
-has_film used to count any clips/*.mp4 whose bytes 4:8 were b'ftyp', even
-when the file was only the 8-byte box header or the brand slot was NUL.
-A phone file is an ISO BMFF ftyp box with a 4-byte major brand. Gate stays closed.
+has_film accepted clips/*.mp4 when the ftyp major brand was a phone brand,
+even if the file ended there. A phone file has an mdat or moov box after
+ftyp. Notes after the header are not film. Gate stays closed.
 """
 
 from __future__ import annotations
@@ -14,8 +14,8 @@ from services.golden_set.labels import CUES, EVENTS
 
 
 def _seed(tmp_path, payload: bytes):
-    (tmp_path / "labels").mkdir()
-    (tmp_path / "clips").mkdir()
+    (tmp_path / "labels").mkdir(exist_ok=True)
+    (tmp_path / "clips").mkdir(exist_ok=True)
     (tmp_path / "clips" / "c1.mp4").write_bytes(payload)
     label = {
         "clip_id": "c1",
@@ -39,16 +39,18 @@ def _seed(tmp_path, payload: bytes):
     }))
 
 
-def test_eight_byte_ftyp_header_does_not_count(tmp_path):
-    _seed(tmp_path, b"\x00\x00\x00\x08ftyp")
+def test_ftyp_without_media_box_does_not_count(tmp_path):
+    _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00film")
     assert gates.get_progress(tmp_path)["wr_labeled"] == 0
 
 
-def test_ftyp_with_null_brand_does_not_count(tmp_path):
-    _seed(tmp_path, b"\x00\x00\x00\x10ftyp\x00\x00\x00\x00")
-    assert gates.get_progress(tmp_path)["wr_labeled"] == 0
+def test_ftyp_then_mdat_or_moov_still_counts(tmp_path):
+    for extra in (b"\x00\x00\x00\x08mdat", b"\x00\x00\x00\x08moov"):
+        _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00" + extra)
+        assert gates.get_progress(tmp_path)["wr_labeled"] == 1, extra
 
 
-def test_ftyp_with_major_brand_still_counts(tmp_path):
-    _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00\x00\x00\x00\x0cmdatfilm")
+def test_free_then_mdat_still_counts(tmp_path):
+    extra = b"\x00\x00\x00\x08free" + b"\x00\x00\x00\x08mdat"
+    _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00" + extra)
     assert gates.get_progress(tmp_path)["wr_labeled"] == 1

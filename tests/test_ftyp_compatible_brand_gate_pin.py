@@ -47,5 +47,5 @@ def test_compatible_brand_film_test_note_do_not_count(tmp_path):
 
 def test_phone_compatible_brand_still_counts(tmp_path):
     for brand in (b"isom", b"iso2", b"mp41", b"mp42", b"avc1", b"mp71"):
-        _seed(tmp_path, b"\x00\x00\x00\x14ftypisom\x00\x00\x00\x00" + brand)
+        _seed(tmp_path, b"\x00\x00\x00\x14ftypisom\x00\x00\x00\x00" + brand + b"\x00\x00\x00\x08mdat")
         assert gates.get_progress(tmp_path)["wr_labeled"] == 1, brand
