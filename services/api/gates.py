@@ -153,6 +153,7 @@ def _is_camera_file(path: Path, root_resolved: Path) -> bool:
         return False
     # mdat/moov/free/skip/wide/ftyp are box types, not brands a phone writes.
     # Any other 4 letters (test, fake, note) are not a phone brand either.
+    # Near-misses (iso3, mp43, avc3, mp4a, dash) and uppercase ISOM/MP42 are not either.
     # Phones write isom / iso2 / mp41 / mp42 / avc1 / mp71.
     if brand in {b"mdat", b"moov", b"free", b"skip", b"wide", b"ftyp"}:
         return False
