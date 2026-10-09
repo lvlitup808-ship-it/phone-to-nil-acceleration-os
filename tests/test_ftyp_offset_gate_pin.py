@@ -1,0 +1,51 @@
+"""Honesty pin: the letters ftyp in a notes file are not camera film.
+
+The gate used to accept any file whose first 32 bytes contained b"ftyp".
+A text note that mentions ftyp then counted as a filmed clip. Only an ISO
+BMFF header with the box type at bytes 4:8 counts. Gate stays closed.
+"""
+
+from __future__ import annotations
+
+import json
+
+from services.api import gates
+from services.golden_set.labels import CUES, EVENTS
+
+
+def _seed(tmp_path, payload: bytes):
+    (tmp_path / "labels").mkdir()
+    (tmp_path / "clips").mkdir()
+    (tmp_path / "clips" / "c1.mp4").write_bytes(payload)
+    label = {
+        "clip_id": "c1",
+        "coach_id": "coach_a",
+        "labeling_protocol_version": "1.0.0",
+        "events": {name: {"t_ms": 100} for name in EVENTS["release"]},
+        "cues": {name: {"value": 1} for name in CUES["release"]},
+    }
+    (tmp_path / "labels" / "c1_coach_a.json").write_text(json.dumps(label))
+    (tmp_path / "manifest.json").write_text(json.dumps({
+        "labeling_protocol_version": "1.0.0",
+        "clips": [{
+            "clip_id": "c1",
+            "position_target": "WR",
+            "movement": "release",
+            "athlete_id": "ath_1",
+            "surface": "turf",
+            "lighting": "day",
+            "camera_side": {"path": "clips/c1.mp4", "present": True},
+        }],
+    }))
+
+
+def test_ftyp_letters_inside_a_note_do_not_count(tmp_path):
+    _seed(tmp_path, b"note ftyp is not a box")
+    progress = gates.get_progress(tmp_path)
+    assert progress["wr_labeled"] == 0
+
+
+def test_ftyp_box_at_offset_4_still_counts(tmp_path):
+    _seed(tmp_path, b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00film")
+    progress = gates.get_progress(tmp_path)
+    assert progress["wr_labeled"] == 1
