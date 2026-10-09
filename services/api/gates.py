@@ -14,7 +14,7 @@ A symlink under labels/ is not a coach label, even when it points at a real JSON
 A labels directory that is itself a symlink is not the coach-label store. A manifest.json that is a symlink is not the golden-set manifest, even when it points at a real JSON file.
 A golden-set directory that is itself a symlink is not the store on disk, even when the link target has a real manifest, labels, and film.
 A cue value of NaN or Infinity is not a measurement and does not complete a label.
-Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. A renamed text, JSON, or JPEG file is not film: bytes 4:8 must be the ftyp box. The letters ftyp later in the header are not a box. An ftyp box whose size field is 0, 1, under 16, not a multiple of 4, or larger than the file is not camera film. A major brand that is a box type name (mdat, moov, free, skip, wide, ftyp) is not a phone brand. A major brand that is not a phone brand (isom, iso2, mp41, mp42, avc1, mp71) is not camera film. A compatible brand after the minor version that is not one of those phone brands is not camera film either. An ftyp box with no mdat or moov after it is not camera film. An mdat or moov box that is only its 8-byte header, including a size of 0 that ends on the header, is not camera film. An mdat or moov whose payload bytes are all NUL or ASCII whitespace is not camera film. free, skip, or wide may sit between them. A uuid box shorter than 24 bytes (header plus 16-byte user type) is not a phone spacer. A wide box that is not exactly 8 bytes is not a phone spacer. A free, skip, or uuid box whose size is not a multiple of 4 is not a phone spacer. A free, skip, wide, or uuid box whose size field is 0 extends to EOF and is not a phone spacer, even when the swallowed bytes look like mdat. A moof or styp before mdat is not a phone spacer. A free, skip, or wide box whose size field is 1 is a 64-bit largesize marker, not an 8-byte spacer, even when the next box is mdat. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. A renamed text, JSON, or JPEG file is not film: bytes 4:8 must be the ftyp box. The letters ftyp later in the header are not a box. An ftyp box whose size field is 0, 1, under 16, not a multiple of 4, or larger than the file is not camera film. A major brand that is a box type name (mdat, moov, free, skip, wide, ftyp) is not a phone brand. A major brand that is not a phone brand (isom, iso2, mp41, mp42, avc1, mp71) is not camera film. A compatible brand after the minor version that is not one of those phone brands is not camera film either. An ftyp box with no mdat or moov after it is not camera film. An mdat or moov box that is only its 8-byte header, including a size of 0 that ends on the header, is not camera film. An mdat or moov whose payload bytes are all NUL or ASCII whitespace is not camera film. A moov whose children are only free, skip, wide, or uuid spacers is not camera film. free, skip, or wide may sit between them. A uuid box shorter than 24 bytes (header plus 16-byte user type) is not a phone spacer. A wide box that is not exactly 8 bytes is not a phone spacer. A free, skip, or uuid box whose size is not a multiple of 4 is not a phone spacer. A free, skip, wide, or uuid box whose size field is 0 extends to EOF and is not a phone spacer, even when the swallowed bytes look like mdat. A moof or styp before mdat is not a phone spacer. A free, skip, or wide box whose size field is 1 is a 64-bit largesize marker, not an 8-byte spacer, even when the next box is mdat. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
 characters and combining marks, so spelling variants, zero-width marks, and
 combining dots cannot inflate progress. A token that still contains a
@@ -180,6 +180,31 @@ def _is_camera_file(path: Path, root_resolved: Path) -> bool:
     return _has_media_box(path, file_size, box_size)
 
 
+
+def _moov_is_only_spacers(payload: bytes) -> bool:
+    """True when every child box is free, skip, wide, or uuid and they fill the payload."""
+    offset = 0
+    saw = False
+    while offset + 8 <= len(payload):
+        size = int.from_bytes(payload[offset : offset + 4], "big")
+        kind = payload[offset + 4 : offset + 8]
+        if size == 0:
+            size = len(payload) - offset
+        if size == 1 or size < 8 or offset + size > len(payload) or size % 4 != 0:
+            return False
+        if kind == b"wide":
+            if size != 8:
+                return False
+        elif kind == b"uuid":
+            if size < 24:
+                return False
+        elif kind not in {b"free", b"skip"}:
+            return False
+        saw = True
+        offset += size
+    return saw and offset == len(payload)
+
+
 def _has_media_box(path: Path, file_size: int, ftyp_size: int) -> bool:
     """True when a later box is mdat or moov with payload, and sizes fit.
 
@@ -188,6 +213,7 @@ def _has_media_box(path: Path, file_size: int, ftyp_size: int) -> bool:
     Notes after the header are not a box and do not count. An 8-byte mdat or
     moov is only a header. A size of 0 that ends on that header is the same lie.
     A payload of only NUL or ASCII whitespace is the same stub.
+    A moov whose children are only free, skip, wide, or uuid is padding, not a movie.
     """
     offset = ftyp_size
     try:
@@ -212,10 +238,12 @@ def _has_media_box(path: Path, file_size: int, ftyp_size: int) -> bool:
                         return False
                     handle.seek(offset + 8)
                     payload = handle.read(size - 8)
-                    return (
-                        len(payload) == size - 8
-                        and any(b not in b"\x00 \t\r\n" for b in payload)
-                    )
+                    if len(payload) != size - 8:
+                        return False
+                    # Spacer type letters are not a movie. free/skip/wide/uuid children only.
+                    if kind == b"moov" and _moov_is_only_spacers(payload):
+                        return False
+                    return any(b not in b"\x00 \t\r\n" for b in payload)
                 # uuid is 8-byte header + 16-byte user type. Shorter is not a spacer.
                 if kind == b"uuid":
                     # Header plus 16-byte user type, on a 4-byte boundary.
