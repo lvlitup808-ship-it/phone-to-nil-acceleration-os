@@ -21,4 +21,11 @@ def band(athlete_id: str, template: str = "wr_release", school_level: str = "hs"
     gate = gate_state()
     if gate["status"] != "open":
         payload.update(gate)
+        # A closed gate must not forward engine dollars, even if estimate_band lies.
+        payload["p25"] = None
+        payload["p50"] = None
+        payload["p75"] = None
+        payload["confidence"] = None
+        payload["comp_cluster_ids"] = []
+        payload["counterfactuals"] = {}
     return payload

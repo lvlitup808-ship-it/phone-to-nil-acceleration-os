@@ -286,6 +286,13 @@ def nil_band(athlete_id: str) -> dict[str, Any]:
     gate = gate_state()
     if gate["status"] != "open":
         band.update(gate)
+        # A closed gate must not forward engine dollars, even if estimate_band lies.
+        band["p25"] = None
+        band["p50"] = None
+        band["p75"] = None
+        band["confidence"] = None
+        band["comp_cluster_ids"] = []
+        band["counterfactuals"] = {}
     return band
 
 
