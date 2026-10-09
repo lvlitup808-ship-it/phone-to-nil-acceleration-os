@@ -82,7 +82,8 @@ def test_gate_counts_diversity_from_manifest_fields(tmp_path):
     }
     for i, (surface, lighting) in enumerate([("turf", "daylight"), ("grass", "night_lit"), ("track", "daylight")]):
         cid = f"clp_010{i}"
-        (tmp_path / "clips" / f"{cid}_side.mp4").write_bytes(b"x")
+        # Same placeholder bytes are one film under content id. Distinct shoots need distinct bytes.
+        (tmp_path / "clips" / f"{cid}_side.mp4").write_bytes(f"film:{cid}".encode())
         clips.append({
             "clip_id": cid, "position_target": "WR", "movement": "release", "athlete_id": f"ath_000{i}",
             "surface": surface, "lighting": lighting,
