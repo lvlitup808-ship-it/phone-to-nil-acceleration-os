@@ -18,6 +18,7 @@ characters and combining marks, so spelling variants, zero-width marks, and
 combining dots cannot inflate progress. A token that still contains a
 non-ASCII letter is not an identity: a Cyrillic lookalike is not a second coach,
 athlete, surface, or lighting condition.
+A coach id must match the save contract coach_[a-z0-9]{1,32} after that fold.
 A number or boolean is not an athlete, surface, or lighting condition.
 A manifest that is not a JSON object, and a clip row that is not an object, are skipped. They must not crash the gate or count as film.
 When the manifest declares labeling_protocol_version, a label counts only if it
@@ -33,6 +34,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 import unicodedata
 from pathlib import Path
 from typing import Any
@@ -72,6 +74,17 @@ def _norm_token(raw: Any) -> str:
     )
     # NFKC does not fold Cyrillic or Greek lookalikes. Those are not a second coach.
     if not token.isascii() or not all(ch.isalnum() or ch in "_-" for ch in token):
+        return ""
+    return token
+
+
+_COACH_ID = re.compile(r"^coach_[a-z0-9]{1,32}$")
+
+
+def _coach_id(raw: Any) -> str:
+    """Coach ids that POST /golden/labels would accept. Junk tokens are not coaches."""
+    token = _norm_token(raw)
+    if _COACH_ID.fullmatch(token) is None:
         return ""
     return token
 
@@ -266,7 +279,7 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
         if not isinstance(label, dict):
             continue
         cid = str(label.get("clip_id", ""))
-        coach = _norm_token(label.get("coach_id"))
+        coach = _coach_id(label.get("coach_id"))
         if cid not in filmed or label.get("excluded") or not coach:
             continue
         if not _complete_label(label, filmed[cid]):
