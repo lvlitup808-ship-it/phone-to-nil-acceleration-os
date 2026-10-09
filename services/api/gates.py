@@ -12,7 +12,7 @@ frozen cues for the clip's movement. A stub file is not a coach label. A labels 
 is skipped, not counted, and must not crash the gate.
 A symlink under labels/ is not a coach label, even when it points at a real JSON file.
 A cue value of NaN or Infinity is not a measurement and does not complete a label.
-Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
 characters and combining marks, so spelling variants, zero-width marks, and
 combining dots cannot inflate progress. A token that still contains a
@@ -28,6 +28,7 @@ surface / lighting mix. An RB, OL, or other position cannot fill those bars.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import unicodedata
@@ -200,6 +201,18 @@ def _file_id(path: Path) -> tuple[int, int] | None:
     return (stat.st_dev, stat.st_ino)
 
 
+def _content_id(path: Path) -> str | None:
+    """SHA-256 of the camera bytes. A copy is the same film with a new inode."""
+    digest = hashlib.sha256()
+    try:
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+    except OSError:
+        return None
+    return digest.hexdigest()
+
+
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     loaded = _load_json(golden_dir / "manifest.json")
     # A list or string is truthy, so `or {}` would not save the gate from .get.
@@ -216,17 +229,23 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     filmed: dict[str, dict[str, Any]] = {}
     claimed: set[Path] = set()
     claimed_files: set[tuple[int, int]] = set()
+    claimed_hashes: set[str] = set()
     for cid, clip in clips.items():
         paths = _film_paths(clip, golden_dir)
         file_ids = {file_id for path in paths if (file_id := _file_id(path))}
+        content_ids = {content_id for path in paths if (content_id := _content_id(path))}
+        # Unreadable bytes are not film we can prove unique.
         if (
             not paths
+            or not content_ids
             or any(path in claimed for path in paths)
             or bool(file_ids & claimed_files)
+            or bool(content_ids & claimed_hashes)
         ):
             continue
         claimed.update(paths)
         claimed_files.update(file_ids)
+        claimed_hashes.update(content_ids)
         filmed[cid] = clip
 
     coaches: dict[str, set[str]] = {}

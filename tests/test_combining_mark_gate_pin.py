@@ -62,7 +62,7 @@ def test_combining_mark_mix_fields_do_not_inflate_diversity(tmp_path):
         _clip("c2", f"ath_1{ACUTE}", f"turf{ACUTE}", f"day{ACUTE}"),
     ]
     for clip in clips:
-        (tmp_path / "clips" / f"{clip['clip_id']}.mp4").write_bytes(b"x")
+        (tmp_path / "clips" / f"{clip['clip_id']}.mp4").write_bytes(clip["clip_id"].encode())
     (tmp_path / "manifest.json").write_text(json.dumps({"clips": clips}))
     complete = _complete()
     for clip in clips:

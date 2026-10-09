@@ -27,7 +27,7 @@ def _write(tmp_path, clips):
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
     for clip in clips:
-        (tmp_path / "clips" / f"{clip['clip_id']}.mp4").write_bytes(b"film")
+        (tmp_path / "clips" / f"{clip['clip_id']}.mp4").write_bytes(clip["clip_id"].encode())
         (tmp_path / "labels" / f"{clip['clip_id']}.json").write_text(
             json.dumps(_label(clip["clip_id"]))
         )

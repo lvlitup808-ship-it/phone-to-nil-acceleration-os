@@ -39,7 +39,7 @@ def _write(tmp_path, clips: list[dict]) -> None:
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
     (tmp_path / "clips" / "shared.mp4").write_bytes(b"film")
-    (tmp_path / "clips" / "other.mp4").write_bytes(b"film")
+    (tmp_path / "clips" / "other.mp4").write_bytes(b"other-film")
     (tmp_path / "manifest.json").write_text(
         json.dumps({"clips": clips, "labeling_protocol_version": "1.0.0"})
     )
