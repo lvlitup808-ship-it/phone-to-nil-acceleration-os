@@ -47,5 +47,5 @@ def test_ftyp_brand_test_fake_note_do_not_count(tmp_path):
 
 def test_phone_brands_still_count(tmp_path):
     for brand in (b"isom", b"iso2", b"mp41", b"mp42", b"avc1", b"mp71"):
-        _seed(tmp_path, b"\x00\x00\x00\x10ftyp" + brand + b"\x00\x00\x00\x00" + b"\x00\x00\x00\x08mdat")
+        _seed(tmp_path, b"\x00\x00\x00\x10ftyp" + brand + b"\x00\x00\x00\x00" + b"\x00\x00\x00\x09mdat\x00")
         assert gates.get_progress(tmp_path)["wr_labeled"] == 1, brand
