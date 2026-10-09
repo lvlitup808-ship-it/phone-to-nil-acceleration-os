@@ -29,7 +29,7 @@ def _golden_dir(tmp_path, clips, labels):
         for cam in ("camera_side", "camera_45"):
             if c.get(cam, {}).get("present"):
                 path = c[cam]["path"]
-                (tmp_path / path).write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00" + f"film:{path}".encode())
+                (tmp_path / path).write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00" + f"film:{path}".encode())
     (tmp_path / "manifest.json").write_text(json.dumps({"clips": clips}))
     (tmp_path / "labels" / "_template.json").write_text(json.dumps({"clip_id": clips[0]["clip_id"], "coach_id": "t"}))
     for i, lab in enumerate(labels):

@@ -37,7 +37,7 @@ def _clip(clip_id: str, athlete_id: str, surface: str, lighting: str) -> dict:
 def test_zero_width_coach_ids_do_not_inflate_inter_rater(tmp_path):
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
-    (tmp_path / "clips" / "c1.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00x")
+    (tmp_path / "clips" / "c1.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00x")
     (tmp_path / "manifest.json").write_text(
         json.dumps({"clips": [_clip("c1", "ath_1", "turf", "day")]})
     )
@@ -62,7 +62,7 @@ def test_zero_width_mix_fields_do_not_inflate_diversity(tmp_path):
         _clip("c2", f"ath_1{ZWSP}", f"turf{ZWSP}", f"day{ZWSP}"),
     ]
     for clip in clips:
-        (tmp_path / "clips" / f"{clip['clip_id']}.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00" + clip["clip_id"].encode())
+        (tmp_path / "clips" / f"{clip['clip_id']}.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00" + clip["clip_id"].encode())
     (tmp_path / "manifest.json").write_text(json.dumps({"clips": clips}))
     complete = _complete()
     for clip in clips:

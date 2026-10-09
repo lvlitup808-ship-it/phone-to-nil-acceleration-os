@@ -25,7 +25,7 @@ def _label(clip_id: str) -> dict:
 def test_off_position_film_does_not_fill_mix(tmp_path):
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
-    (tmp_path / "clips" / "rb.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00x")
+    (tmp_path / "clips" / "rb.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00x")
     clip = {
         "clip_id": "c_rb",
         "position_target": "RB",

@@ -75,13 +75,13 @@ def _dir(tmp_path, clips, labels):
 def test_labels_without_coach_id_do_not_count(tmp_path):
     clips = [{"clip_id": "c1", "position_target": "WR", "camera_side": {"path": "clips/c1.mp4", "present": True}}]
     d = _dir(tmp_path, clips, [{"clip_id": "c1"}])
-    (d / "clips/c1.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00x")
+    (d / "clips/c1.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00x")
     assert gates.get_progress(d)["wr_labeled"] == 0
 
 
 def test_film_outside_golden_dir_does_not_count(tmp_path):
     outside = tmp_path / "outside.mp4"
-    outside.write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00x")
+    outside.write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00x")
     gd = tmp_path / "gd"
     gd.mkdir()
     clips = [{"clip_id": "c1", "position_target": "WR", "camera_side": {"path": "../outside.mp4", "present": True}}]
