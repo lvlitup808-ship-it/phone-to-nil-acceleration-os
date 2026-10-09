@@ -10,7 +10,7 @@ in the manifest, at least one camera file for that clip exists on disk, the
 label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label. A labels file that is not a JSON object
 is skipped, not counted, and must not crash the gate.
-A symlink under labels/ is not a coach label, even when it points at a real JSON file.
+A symlink under labels/ is not a coach label, even when it points at a real JSON file. A symlinked labels directory is not coach labels, even when the target holds complete JSON.
 A cue value of NaN or Infinity is not a measurement and does not complete a label.
 Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
@@ -232,7 +232,11 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     coaches: dict[str, set[str]] = {}
     disputed: set[str] = set()
     labels_dir = golden_dir / "labels"
-    for path in sorted(labels_dir.glob("*.json")) if labels_dir.is_dir() else []:
+    # is_dir() follows a directory symlink. A linked labels/ is not on disk.
+    label_paths = []
+    if labels_dir.is_dir() and not labels_dir.is_symlink():
+        label_paths = sorted(labels_dir.glob("*.json"))
+    for path in label_paths:
         if path.name.startswith("_"):
             continue
         # A symlink is not a coach label on disk. read_text() would follow it.
