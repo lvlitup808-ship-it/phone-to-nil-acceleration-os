@@ -40,7 +40,7 @@ def test_symlink_only_camera_does_not_count(tmp_path):
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
     real = tmp_path / "clips" / "bytes.mp4"
-    real.write_bytes(b"film")
+    real.write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00film")
     link = tmp_path / "clips" / "c1.mp4"
     link.symlink_to(real)
     clip = _clip("c1", "clips/c1.mp4", "ath_1", "turf")
@@ -58,7 +58,7 @@ def test_symlink_to_another_clip_does_not_count_twice(tmp_path):
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
     original = tmp_path / "clips" / "c1.mp4"
-    original.write_bytes(b"film")
+    original.write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00film")
     (tmp_path / "clips" / "c2.mp4").symlink_to(original)
     clips = [
         _clip("c1", "clips/c1.mp4", "ath_1", "turf"),
@@ -81,7 +81,7 @@ def test_real_file_still_counts_when_other_angle_is_symlink(tmp_path):
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
     side = tmp_path / "clips" / "side.mp4"
-    side.write_bytes(b"film")
+    side.write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00film")
     (tmp_path / "clips" / "angle.mp4").symlink_to(side)
     clip = _clip("c1", "clips/side.mp4", "ath_1", "turf")
     clip["camera_45"] = {"path": "clips/angle.mp4", "present": True}

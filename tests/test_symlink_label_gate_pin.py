@@ -26,7 +26,7 @@ def _label(clip_id: str, coach: str) -> dict:
 def _golden(tmp_path) -> None:
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
-    (tmp_path / "clips" / "c1.mp4").write_bytes(b"film")
+    (tmp_path / "clips" / "c1.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00film")
     (tmp_path / "manifest.json").write_text(
         json.dumps(
             {
