@@ -66,7 +66,7 @@ def test_present_true_and_file_on_disk_does_count(tmp_path):
         }
     ]
     (tmp_path / "clips").mkdir()
-    (tmp_path / "clips" / "c_real.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00x")
+    (tmp_path / "clips" / "c_real.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00x")
     (tmp_path / "labels").mkdir()
     (tmp_path / "manifest.json").write_text(json.dumps({"clips": clips}))
     (tmp_path / "labels" / "l0.json").write_text(

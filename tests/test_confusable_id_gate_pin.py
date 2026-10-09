@@ -16,7 +16,7 @@ from services.golden_set.labels import CUES, EVENTS
 def test_confusable_coach_id_does_not_inflate_inter_rater(tmp_path):
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
-    (tmp_path / "clips" / "c1.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00x")
+    (tmp_path / "clips" / "c1.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00x")
     clip = {
         "clip_id": "c1",
         "position_target": "WR",
@@ -47,8 +47,8 @@ def test_confusable_coach_id_does_not_inflate_inter_rater(tmp_path):
 def test_confusable_surface_does_not_inflate_mix(tmp_path):
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
-    (tmp_path / "clips" / "c1.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00x")
-    (tmp_path / "clips" / "c2.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00y")
+    (tmp_path / "clips" / "c1.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00x")
+    (tmp_path / "clips" / "c2.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00y")
     complete = {
         "events": {name: {"t_ms": 100} for name in EVENTS["release"]},
         "cues": {name: {"value": 1.0, "disputed": False} for name in CUES["release"]},

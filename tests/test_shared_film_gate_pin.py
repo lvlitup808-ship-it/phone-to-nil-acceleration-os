@@ -38,8 +38,8 @@ def _clip(clip_id: str, path: str, athlete: str, surface: str) -> dict:
 def _write(tmp_path, clips: list[dict]) -> None:
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
-    (tmp_path / "clips" / "shared.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00film")
-    (tmp_path / "clips" / "other.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00other-film")
+    (tmp_path / "clips" / "shared.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00film")
+    (tmp_path / "clips" / "other.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00other-film")
     (tmp_path / "manifest.json").write_text(
         json.dumps({"clips": clips, "labeling_protocol_version": "1.0.0"})
     )
