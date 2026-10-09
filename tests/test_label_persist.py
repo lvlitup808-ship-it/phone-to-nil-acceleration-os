@@ -25,7 +25,7 @@ WR_CUES = [
 def golden(tmp_path, monkeypatch):
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
-    (tmp_path / "clips" / "clp_0100_side.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00x")
+    (tmp_path / "clips" / "clp_0100_side.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00\x00\x00\x00\x09mdatx")
     manifest = {
         "labeling_protocol_version": "1.0.0",
         "clips": [

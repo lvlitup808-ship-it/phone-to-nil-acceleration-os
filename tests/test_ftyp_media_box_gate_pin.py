@@ -1,9 +1,8 @@
-"""Honesty pin: an ftyp box larger than the file is not camera film.
+"""Honesty pin: an ftyp header with no media box is not camera film.
 
-has_film accepted clips/*.mp4 when bytes 4:8 were ftyp, the brand was
-alphanumeric, and the size field was >= 16, even if that size was bigger
-than the bytes on disk. A phone file cannot declare a box it does not hold.
-Gate stays closed.
+has_film accepted clips/*.mp4 when bytes 4:8 were ftyp and the major brand
+was a phone brand, even if the file ended there. A phone file has an mdat
+or moov box after ftyp. Notes after the header are not film. Gate stays closed.
 """
 
 from __future__ import annotations
@@ -15,8 +14,8 @@ from services.golden_set.labels import CUES, EVENTS
 
 
 def _seed(tmp_path, payload: bytes):
-    (tmp_path / "labels").mkdir()
-    (tmp_path / "clips").mkdir()
+    (tmp_path / "labels").mkdir(exist_ok=True)
+    (tmp_path / "clips").mkdir(exist_ok=True)
     (tmp_path / "clips" / "c1.mp4").write_bytes(payload)
     label = {
         "clip_id": "c1",
@@ -40,18 +39,18 @@ def _seed(tmp_path, payload: bytes):
     }))
 
 
-def test_ftyp_box_larger_than_file_does_not_count(tmp_path):
-    # Size field says 32. The file is only the 16-byte header plus brand.
-    _seed(tmp_path, b"\x00\x00\x00\x20ftypisom\x00\x00\x00\x00")
+def test_ftyp_without_media_box_does_not_count(tmp_path):
+    _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00film")
     assert gates.get_progress(tmp_path)["wr_labeled"] == 0
 
 
-def test_ftyp_box_size_max_does_not_count(tmp_path):
-    # 0xFFFFFFFF is not a box this file holds.
-    _seed(tmp_path, b"\xff\xff\xff\xffftypisom" + b"\x00" * 8)
-    assert gates.get_progress(tmp_path)["wr_labeled"] == 0
+def test_ftyp_then_mdat_or_moov_still_counts(tmp_path):
+    for extra in (b"\x00\x00\x00\x08mdat", b"\x00\x00\x00\x08moov"):
+        _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00" + extra)
+        assert gates.get_progress(tmp_path)["wr_labeled"] == 1, extra
 
 
-def test_ftyp_box_that_fits_still_counts(tmp_path):
-    _seed(tmp_path, b"\x00\x00\x00\x14ftypisom\x00\x00\x00\x00film\x00\x00\x00\x08mdat")
+def test_free_then_mdat_still_counts(tmp_path):
+    extra = b"\x00\x00\x00\x08free" + b"\x00\x00\x00\x08mdat"
+    _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00" + extra)
     assert gates.get_progress(tmp_path)["wr_labeled"] == 1
