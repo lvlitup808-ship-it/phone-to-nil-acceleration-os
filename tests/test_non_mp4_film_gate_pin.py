@@ -70,6 +70,6 @@ def test_txt_under_clips_is_not_film(tmp_path):
 
 
 def test_mp4_under_clips_still_counts(tmp_path):
-    _seed(tmp_path, "clips/c1.mp4", b"film")
+    _seed(tmp_path, "clips/c1.mp4", b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00film")
     progress = gates.get_progress(tmp_path)
     assert progress["wr_labeled"] == 1

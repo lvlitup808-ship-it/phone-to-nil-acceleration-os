@@ -40,7 +40,7 @@ def _write(tmp_path) -> None:
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
     original = tmp_path / "clips" / "c1.mp4"
-    original.write_bytes(b"film")
+    original.write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00film")
     os.link(original, tmp_path / "clips" / "c2.mp4")
     clips = [
         _clip("c1", "clips/c1.mp4", "ath_1", "turf"),
@@ -67,7 +67,7 @@ def test_same_clip_side_and_45_hardlink_still_counts(tmp_path):
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
     side = tmp_path / "clips" / "side.mp4"
-    side.write_bytes(b"film")
+    side.write_bytes(b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00film")
     os.link(side, tmp_path / "clips" / "angle.mp4")
     clip = {
         "clip_id": "c1",

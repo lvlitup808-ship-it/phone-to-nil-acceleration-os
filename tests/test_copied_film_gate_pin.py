@@ -36,11 +36,15 @@ def _clip(clip_id: str, athlete: str, surface: str) -> dict:
     }
 
 
+def _box(payload: bytes) -> bytes:
+    return b"\x00\x00\x00\x18ftypisom\x00\x00\x00\x00" + payload
+
+
 def _seed(tmp_path, first: bytes, second: bytes):
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
-    (tmp_path / "clips" / "c1.mp4").write_bytes(first)
-    (tmp_path / "clips" / "c2.mp4").write_bytes(second)
+    (tmp_path / "clips" / "c1.mp4").write_bytes(_box(first))
+    (tmp_path / "clips" / "c2.mp4").write_bytes(_box(second))
     clips = [_clip("c1", "ath_1", "turf"), _clip("c2", "ath_2", "grass")]
     (tmp_path / "manifest.json").write_text(
         json.dumps({"clips": clips, "labeling_protocol_version": "1.0.0"})
