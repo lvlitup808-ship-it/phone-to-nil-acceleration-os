@@ -1,8 +1,7 @@
-"""Honesty pin: a random 4-letter major brand is not camera film.
+"""Honesty pin: an mdat or moov box with no payload is not camera film.
 
-has_film accepted clips/*.mp4 when bytes 4:8 were ftyp and the next four
-bytes were alphanumeric and not a box type. test, fake, note, and xxxx are
-not brands a phone file writes. Gate stays closed.
+has_film counted a phone ftyp when a later box was mdat or moov, even if that
+box was only its 8-byte header. A phone file carries sample bytes. Gate stays closed.
 """
 
 from __future__ import annotations
@@ -39,13 +38,13 @@ def _seed(tmp_path, payload: bytes):
     }))
 
 
-def test_ftyp_brand_test_fake_note_do_not_count(tmp_path):
-    for brand in (b"test", b"fake", b"note", b"xxxx", b"text"):
-        _seed(tmp_path, b"\x00\x00\x00\x10ftyp" + brand + b"\x00\x00\x00\x00film")
-        assert gates.get_progress(tmp_path)["wr_labeled"] == 0, brand
+def test_header_only_mdat_or_moov_does_not_count(tmp_path):
+    for extra in (b"\x00\x00\x00\x08mdat", b"\x00\x00\x00\x08moov"):
+        _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00" + extra)
+        assert gates.get_progress(tmp_path)["wr_labeled"] == 0, extra
 
 
-def test_phone_brands_still_count(tmp_path):
-    for brand in (b"isom", b"iso2", b"mp41", b"mp42", b"avc1", b"mp71"):
-        _seed(tmp_path, b"\x00\x00\x00\x10ftyp" + brand + b"\x00\x00\x00\x00" + b"\x00\x00\x00\x09mdatx")
-        assert gates.get_progress(tmp_path)["wr_labeled"] == 1, brand
+def test_media_box_with_one_payload_byte_still_counts(tmp_path):
+    for extra in (b"\x00\x00\x00\x09mdatx", b"\x00\x00\x00\x09moovx"):
+        _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00" + extra)
+        assert gates.get_progress(tmp_path)["wr_labeled"] == 1, extra

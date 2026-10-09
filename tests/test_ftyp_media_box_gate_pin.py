@@ -45,12 +45,12 @@ def test_ftyp_without_media_box_does_not_count(tmp_path):
 
 
 def test_ftyp_then_mdat_or_moov_still_counts(tmp_path):
-    for extra in (b"\x00\x00\x00\x08mdat", b"\x00\x00\x00\x08moov"):
+    for extra in (b"\x00\x00\x00\x09mdatx", b"\x00\x00\x00\x09moovx"):
         _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00" + extra)
         assert gates.get_progress(tmp_path)["wr_labeled"] == 1, extra
 
 
 def test_free_then_mdat_still_counts(tmp_path):
-    extra = b"\x00\x00\x00\x08free" + b"\x00\x00\x00\x08mdat"
+    extra = b"\x00\x00\x00\x08free" + b"\x00\x00\x00\x09mdatx"
     _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00" + extra)
     assert gates.get_progress(tmp_path)["wr_labeled"] == 1
