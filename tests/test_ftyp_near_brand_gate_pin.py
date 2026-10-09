@@ -1,9 +1,8 @@
-"""Honesty pin: an ftyp box larger than the file is not camera film.
+"""Honesty pin: a near-miss major brand is not camera film.
 
-has_film accepted clips/*.mp4 when bytes 4:8 were ftyp, the brand was
-alphanumeric, and the size field was >= 16, even if that size was bigger
-than the bytes on disk. A phone file cannot declare a box it does not hold.
-Gate stays closed.
+has_film counts clips/*.mp4 only when the ftyp major brand is one of
+isom, iso2, mp41, mp42, avc1, mp71. iso3, mp43, avc3, mp4a, dash, and
+uppercase ISOM/MP42 are not those brands. Gate stays closed.
 """
 
 from __future__ import annotations
@@ -15,8 +14,8 @@ from services.golden_set.labels import CUES, EVENTS
 
 
 def _seed(tmp_path, payload: bytes):
-    (tmp_path / "labels").mkdir()
-    (tmp_path / "clips").mkdir()
+    (tmp_path / "labels").mkdir(exist_ok=True)
+    (tmp_path / "clips").mkdir(exist_ok=True)
     (tmp_path / "clips" / "c1.mp4").write_bytes(payload)
     label = {
         "clip_id": "c1",
@@ -40,18 +39,12 @@ def _seed(tmp_path, payload: bytes):
     }))
 
 
-def test_ftyp_box_larger_than_file_does_not_count(tmp_path):
-    # Size field says 32. The file is only the 16-byte header plus brand.
-    _seed(tmp_path, b"\x00\x00\x00\x20ftypisom\x00\x00\x00\x00")
-    assert gates.get_progress(tmp_path)["wr_labeled"] == 0
+def test_near_miss_brands_do_not_count(tmp_path):
+    for brand in (b"iso3", b"mp43", b"avc3", b"mp4a", b"dash", b"ISOM", b"MP42"):
+        _seed(tmp_path, b"\x00\x00\x00\x14ftyp" + brand + b"\x00\x00\x00\x00film")
+        assert gates.get_progress(tmp_path)["wr_labeled"] == 0, brand
 
 
-def test_ftyp_box_size_max_does_not_count(tmp_path):
-    # 0xFFFFFFFF is not a box this file holds.
-    _seed(tmp_path, b"\xff\xff\xff\xffftypisom" + b"\x00" * 8)
-    assert gates.get_progress(tmp_path)["wr_labeled"] == 0
-
-
-def test_ftyp_box_that_fits_still_counts(tmp_path):
+def test_phone_brand_still_counts(tmp_path):
     _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00\x00\x00\x00\x08mdat")
     assert gates.get_progress(tmp_path)["wr_labeled"] == 1

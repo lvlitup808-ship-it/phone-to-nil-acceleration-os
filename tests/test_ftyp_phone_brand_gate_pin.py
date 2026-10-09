@@ -41,11 +41,11 @@ def _seed(tmp_path, payload: bytes):
 
 def test_ftyp_brand_test_fake_note_do_not_count(tmp_path):
     for brand in (b"test", b"fake", b"note", b"xxxx", b"text"):
-        _seed(tmp_path, b"\x00\x00\x00\x14ftyp" + brand + b"\x00\x00\x00\x00film")
+        _seed(tmp_path, b"\x00\x00\x00\x10ftyp" + brand + b"\x00\x00\x00\x00film")
         assert gates.get_progress(tmp_path)["wr_labeled"] == 0, brand
 
 
 def test_phone_brands_still_count(tmp_path):
     for brand in (b"isom", b"iso2", b"mp41", b"mp42", b"avc1", b"mp71"):
-        _seed(tmp_path, b"\x00\x00\x00\x14ftyp" + brand + b"\x00\x00\x00\x00film" + b"\x00\x00\x00\x08mdat")
+        _seed(tmp_path, b"\x00\x00\x00\x10ftyp" + brand + b"\x00\x00\x00\x00" + b"\x00\x00\x00\x08mdat")
         assert gates.get_progress(tmp_path)["wr_labeled"] == 1, brand
