@@ -12,7 +12,7 @@ frozen cues for the clip's movement. A stub file is not a coach label. A labels 
 is skipped, not counted, and must not crash the gate.
 A symlink under labels/ is not a coach label, even when it points at a real JSON file.
 A cue value of NaN or Infinity is not a measurement and does not complete a label.
-Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. A file named .mp4 with no ftyp box is not camera film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
 characters and combining marks, so spelling variants, zero-width marks, and
 combining dots cannot inflate progress. A token that still contains a
@@ -113,7 +113,7 @@ def _film_paths(clip: dict[str, Any], root: Path) -> list[Path]:
 
 
 def _is_camera_file(path: Path, root_resolved: Path) -> bool:
-    """True only for a non-empty regular file at clips/<name>.mp4 under the golden root."""
+    """True only for a non-empty clips/<name>.mp4 with an ftyp box under the golden root."""
     if not path.is_relative_to(root_resolved) or not path.is_file():
         return False
     try:
@@ -125,9 +125,21 @@ def _is_camera_file(path: Path, root_resolved: Path) -> bool:
     if relative.suffix.casefold() != ".mp4":
         return False
     try:
-        return path.stat().st_size > 0
+        if path.stat().st_size <= 0:
+            return False
     except OSError:
         return False
+    return _looks_like_mp4(path)
+
+
+def _looks_like_mp4(path: Path) -> bool:
+    """ISO BMFF camera files carry an ftyp box in the header. A renamed notes file does not."""
+    try:
+        with path.open("rb") as handle:
+            head = handle.read(64)
+    except OSError:
+        return False
+    return b"ftyp" in head
 
 
 def has_film(clip: dict[str, Any], root: Path) -> bool:

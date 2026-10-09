@@ -27,7 +27,7 @@ def _label() -> dict:
 def _film(tmp_path) -> None:
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
-    (tmp_path / "clips" / "c1.mp4").write_bytes(b"film")
+    (tmp_path / "clips" / "c1.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom" + b"film")
     (tmp_path / "labels" / "c1_coach_a.json").write_text(json.dumps(_label()))
 
 

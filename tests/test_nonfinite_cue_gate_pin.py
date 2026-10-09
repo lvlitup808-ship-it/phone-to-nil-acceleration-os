@@ -25,7 +25,7 @@ def _label(cue_value: float) -> dict:
 def _golden(tmp_path, cue_value: float) -> None:
     (tmp_path / "labels").mkdir()
     (tmp_path / "clips").mkdir()
-    (tmp_path / "clips" / "c1.mp4").write_bytes(b"x")
+    (tmp_path / "clips" / "c1.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom" + b"x")
     (tmp_path / "manifest.json").write_text(
         json.dumps(
             {

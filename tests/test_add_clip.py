@@ -19,7 +19,7 @@ def golden(tmp_path):
     shutil.copy(ROOT / "data/golden_set/manifest.json", tmp_path / "manifest.json")
     (tmp_path / "clips").mkdir()
     for name in (SIDE, FORTY_FIVE):
-        (tmp_path / "clips" / name).write_bytes(b"x")
+        (tmp_path / "clips" / name).write_bytes(b"\x00\x00\x00\x18ftypisom" + b"x")
     return tmp_path
 
 
@@ -65,7 +65,7 @@ def test_rejects_values_outside_intake_vocabulary(golden):
 
 
 def test_rejects_filename_without_athlete_id(golden, capsys):
-    (golden / "clips" / "clip_side.mp4").write_bytes(b"x")
+    (golden / "clips" / "clip_side.mp4").write_bytes(b"\x00\x00\x00\x18ftypisom" + b"x")
     assert _add(golden, side="clip_side.mp4") == 1
     assert "Rename" in capsys.readouterr().err
 
@@ -81,7 +81,7 @@ def test_rejects_camera_not_present_on_disk(golden, gone, capsys):
 
 def test_rejects_mismatched_pair(golden):
     other = "ath_0043_WR_release_45_20260925.mp4"
-    (golden / "clips" / other).write_bytes(b"x")
+    (golden / "clips" / other).write_bytes(b"\x00\x00\x00\x18ftypisom" + b"x")
     assert _add(golden, forty_five=other) == 1
 
 
@@ -91,7 +91,7 @@ def test_rejects_wrong_angles(golden):
 
 def test_rejects_paths_outside_clips(golden, tmp_path_factory):
     outside = tmp_path_factory.mktemp("elsewhere") / SIDE
-    outside.write_bytes(b"x")
+    outside.write_bytes(b"\x00\x00\x00\x18ftypisom" + b"x")
     assert _add(golden, side=str(outside)) == 1
     assert _add(golden, side=f"../{SIDE}") == 1
 
