@@ -25,6 +25,8 @@ When the manifest declares labeling_protocol_version, a label counts only if it
 carries that same stamp. A missing or other protocol is not a coach label.
 A number, bool, or blank protocol is not a declared stamp: it must not disable
 the check and must not count.
+A clip_id that is only whitespace is not a clip. A label clip_id must be the
+same string the manifest row uses; a number is not that id.
 Only WR and DB clips count toward labeled totals, inter-rater, and the
 surface / lighting mix. An RB, OL, or other position cannot fill those bars.
 """
@@ -238,7 +240,8 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
             if not isinstance(row, dict):
                 continue
             cid = row.get("clip_id")
-            if isinstance(cid, str) and cid:
+            # "   " is truthy. It is not a clip the intake form named.
+            if isinstance(cid, str) and cid.strip() and cid.strip() == cid:
                 clips[cid] = row
     filmed: dict[str, dict[str, Any]] = {}
     claimed: set[Path] = set()
@@ -279,9 +282,10 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
         label = _load_json(path)
         if not isinstance(label, dict):
             continue
-        cid = str(label.get("clip_id", ""))
+        # str(1234) must not attach a numeric label to the manifest row "1234".
+        cid = label.get("clip_id")
         coach = _norm_token(label.get("coach_id"))
-        if cid not in filmed or label.get("excluded") or not coach:
+        if not isinstance(cid, str) or cid not in filmed or label.get("excluded") or not coach:
             continue
         if not _complete_label(label, filmed[cid]):
             continue
