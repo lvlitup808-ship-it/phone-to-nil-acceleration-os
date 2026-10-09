@@ -14,7 +14,7 @@ A symlink under labels/ is not a coach label, even when it points at a real JSON
 A labels directory that is itself a symlink is not the coach-label store. A manifest.json that is a symlink is not the golden-set manifest, even when it points at a real JSON file.
 A golden-set directory that is itself a symlink is not the store on disk, even when the link target has a real manifest, labels, and film.
 A cue value of NaN or Infinity is not a measurement and does not complete a label.
-Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. A renamed text, JSON, or JPEG file is not film: bytes 4:8 must be the ftyp box. The letters ftyp later in the header are not a box. An ftyp box whose size field is 0, 1, under 16, not a multiple of 4, or larger than the file is not camera film. A major brand that is a box type name (mdat, moov, free, skip, wide, ftyp) is not a phone brand. A major brand that is not a phone brand (isom, iso2, mp41, mp42, avc1, mp71) is not camera film. A compatible brand after the minor version that is not one of those phone brands is not camera film either. An ftyp box with no mdat or moov after it is not camera film. An mdat or moov box that is only its 8-byte header, including a size of 0 that ends on the header, is not camera film. free, skip, wide, or uuid may sit between them. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. A renamed text, JSON, or JPEG file is not film: bytes 4:8 must be the ftyp box. The letters ftyp later in the header are not a box. An ftyp box whose size field is 0, 1, under 16, not a multiple of 4, or larger than the file is not camera film. A major brand that is a box type name (mdat, moov, free, skip, wide, ftyp) is not a phone brand. A major brand that is not a phone brand (isom, iso2, mp41, mp42, avc1, mp71) is not camera film. A compatible brand after the minor version that is not one of those phone brands is not camera film either. An ftyp box with no mdat or moov after it is not camera film. An mdat or moov box that is only its 8-byte header, including a size of 0 that ends on the header, is not camera film. free, skip, or wide may sit between them. A uuid box shorter than 24 bytes (header plus 16-byte user type) is not a phone spacer. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
 characters and combining marks, so spelling variants, zero-width marks, and
 combining dots cannot inflate progress. A token that still contains a
@@ -183,9 +183,10 @@ def _is_camera_file(path: Path, root_resolved: Path) -> bool:
 def _has_media_box(path: Path, file_size: int, ftyp_size: int) -> bool:
     """True when a later box is mdat or moov with payload, and sizes fit.
 
-    free, skip, wide, and uuid may sit between ftyp and the media box. Notes
-    after the header are not a box and do not count. An 8-byte mdat or moov
-    is only a header. A size of 0 that ends on that header is the same lie.
+    free, skip, and wide may sit between ftyp and the media box. A uuid box
+    needs its 16-byte user type, so a size under 24 is not a phone spacer.
+    Notes after the header are not a box and do not count. An 8-byte mdat or
+    moov is only a header. A size of 0 that ends on that header is the same lie.
     """
     offset = ftyp_size
     try:
@@ -204,7 +205,13 @@ def _has_media_box(path: Path, file_size: int, ftyp_size: int) -> bool:
                     return False
                 if kind in {b"mdat", b"moov"}:
                     return size >= 9
-                if kind not in {b"free", b"skip", b"wide", b"uuid"}:
+                # uuid is 8-byte header + 16-byte user type. Shorter is not a spacer.
+                if kind == b"uuid":
+                    if size < 24:
+                        return False
+                    offset += size
+                    continue
+                if kind not in {b"free", b"skip", b"wide"}:
                     return False
                 offset += size
     except OSError:
