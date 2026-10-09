@@ -27,7 +27,7 @@ def _label(clip_id: str) -> dict:
 def _write_packet(root) -> None:
     (root / "labels").mkdir()
     (root / "clips").mkdir()
-    (root / "clips" / "c1.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00film")
+    (root / "clips" / "c1.mp4").write_bytes(b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00\x00\x00\x00\x0cmdatfilm")
     clip = {
         "clip_id": "c1",
         "position_target": "WR",

@@ -52,6 +52,6 @@ def test_jpeg_renamed_to_mp4_does_not_count(tmp_path):
 
 
 def test_ftyp_box_still_counts(tmp_path):
-    _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00film")
+    _seed(tmp_path, b"\x00\x00\x00\x10ftypisom\x00\x00\x00\x00\x00\x00\x00\x0cmdatfilm")
     progress = gates.get_progress(tmp_path)
     assert progress["wr_labeled"] == 1
