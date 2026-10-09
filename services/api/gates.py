@@ -135,8 +135,12 @@ def _is_camera_file(path: Path, root_resolved: Path) -> bool:
             head = handle.read(32)
     except OSError:
         return False
-    # ISO BMFF: 4-byte size, then 'ftyp'. A mention of ftyp in notes is not a box.
-    return len(head) >= 8 and head[4:8] == b"ftyp"
+    # ISO BMFF: 4-byte size, 'ftyp', then a 4-byte major brand.
+    # An 8-byte header, or a brand of NULs, is not a phone file.
+    if len(head) < 16 or head[4:8] != b"ftyp":
+        return False
+    brand = head[8:12]
+    return all(48 <= b <= 57 or 65 <= b <= 90 or 97 <= b <= 122 for b in brand)
 
 
 def has_film(clip: dict[str, Any], root: Path) -> bool:
