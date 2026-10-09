@@ -56,5 +56,5 @@ def test_ftyp_size_19_does_not_count(tmp_path):
 
 
 def test_ftyp_size_20_compatible_brand_still_counts(tmp_path):
-    _seed(tmp_path, b"\x00\x00\x00\x14ftypisom\x00\x00\x00\x00mp41\x00\x00\x00\x08mdat")
+    _seed(tmp_path, b"\x00\x00\x00\x14ftypisom\x00\x00\x00\x00mp41\x00\x00\x00\x09mdatx")
     assert gates.get_progress(tmp_path)["wr_labeled"] == 1
