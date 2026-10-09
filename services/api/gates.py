@@ -22,6 +22,8 @@ A number or boolean is not an athlete, surface, or lighting condition.
 A manifest that is not a JSON object, and a clip row that is not an object, are skipped. They must not crash the gate or count as film.
 When the manifest declares labeling_protocol_version, a label counts only if it
 carries that same stamp. A missing or other protocol is not a coach label.
+A number, bool, or blank protocol is not a declared stamp: it must not disable
+the check and must not count.
 Only WR and DB clips count toward labeled totals, inter-rater, and the
 surface / lighting mix. An RB, OL, or other position cannot fill those bars.
 """
@@ -180,11 +182,14 @@ def _protocol_ok(label: dict[str, Any], manifest: dict[str, Any]) -> bool:
 
     POST /golden/labels stamps labeling_protocol_version. Hand-written files
     that omit the stamp, or name another protocol, must not open the gate.
-    A manifest with no protocol declared does not add this check.
+    A manifest with no protocol key does not add this check. A number, bool,
+    or blank string is not a protocol: fail closed so it cannot skip the stamp.
     """
+    if "labeling_protocol_version" not in manifest:
+        return True
     expected = manifest.get("labeling_protocol_version")
     if not isinstance(expected, str) or not expected.strip():
-        return True
+        return False
     got = label.get("labeling_protocol_version")
     if not isinstance(got, str):
         return False
