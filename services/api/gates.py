@@ -223,10 +223,7 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     manifest_path = golden_dir / "manifest.json"
     # read_text follows a symlink. An outside packet linked in as manifest.json
     # is not the golden-set manifest on disk.
-    if manifest_path.is_symlink():
-        loaded = None
-    else:
-        loaded = _load_json(manifest_path)
+    loaded = None if manifest_path.is_symlink() else _load_json(manifest_path)
     # A list or string is truthy, so `or {}` would not save the gate from .get.
     manifest = loaded if isinstance(loaded, dict) else {}
     raw_clips = manifest.get("clips", [])
