@@ -19,7 +19,7 @@ def _label(clip_id) -> dict:
         "coach_id": "coach_a",
         "labeling_protocol_version": "1.0.0",
         "events": {name: {"t_ms": 100} for name in EVENTS["release"]},
-        "cues": {name: {"value": 1} for name in CUES["release"]},
+        "cues": {name: {"value": 1.0, "disputed": False} for name in CUES["release"]},
     }
 
 
@@ -31,7 +31,6 @@ def _seed(tmp_path, clip_id, label_clip_id) -> None:
     (tmp_path / "manifest.json").write_text(
         json.dumps(
             {
-                "labeling_protocol_version": "1.0.0",
                 "clips": [
                     {
                         "clip_id": clip_id,
