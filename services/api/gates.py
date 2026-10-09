@@ -11,7 +11,7 @@ label is neither excluded nor disputed, and it has the five events and six
 frozen cues for the clip's movement. A stub file is not a coach label. A labels file that is not a JSON object
 is skipped, not counted, and must not crash the gate.
 A symlink under labels/ is not a coach label, even when it points at a real JSON file.
-A labels directory that is itself a symlink is not the coach-label store.
+A labels directory that is itself a symlink is not the coach-label store. A manifest.json that is a symlink is not the golden-set manifest, even when it points at a real JSON file.
 A cue value of NaN or Infinity is not a measurement and does not complete a label.
 Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
@@ -220,7 +220,10 @@ def _content_id(path: Path) -> str | None:
 
 
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
-    loaded = _load_json(golden_dir / "manifest.json")
+    manifest_path = golden_dir / "manifest.json"
+    # read_text follows a symlink. An outside packet linked in as manifest.json
+    # is not the golden-set manifest on disk.
+    loaded = None if manifest_path.is_symlink() else _load_json(manifest_path)
     # A list or string is truthy, so `or {}` would not save the gate from .get.
     manifest = loaded if isinstance(loaded, dict) else {}
     raw_clips = manifest.get("clips", [])
