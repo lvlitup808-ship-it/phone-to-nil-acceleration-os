@@ -187,7 +187,7 @@ def _has_media_box(path: Path, file_size: int, ftyp_size: int) -> bool:
     needs its 16-byte user type, so a size under 24 is not a phone spacer. A wide box that is not exactly 8 bytes is not a phone spacer. free, skip, and uuid must also be a multiple of 4 bytes.
     Notes after the header are not a box and do not count. An 8-byte mdat or
     moov is only a header. A size of 0 that ends on that header is the same lie.
-    A payload of only NUL or ASCII whitespace is the same stub.
+    A payload of only NUL, ASCII whitespace, or 0xFF padding is the same stub.
     """
     offset = ftyp_size
     try:
@@ -207,14 +207,14 @@ def _has_media_box(path: Path, file_size: int, ftyp_size: int) -> bool:
                 if size == 1 or size < 8 or offset + size > file_size:
                     return False
                 if kind in {b"mdat", b"moov"}:
-                    # A header plus only NUL or ASCII whitespace is padding, not samples or a movie.
+                    # A header plus only NUL, ASCII whitespace, or 0xFF is padding, not samples.
                     if size < 9:
                         return False
                     handle.seek(offset + 8)
                     payload = handle.read(size - 8)
                     return (
                         len(payload) == size - 8
-                        and any(b not in b"\x00 \t\r\n" for b in payload)
+                        and any(b not in b"\x00\xff \t\r\n" for b in payload)
                     )
                 # uuid is 8-byte header + 16-byte user type. Shorter is not a spacer.
                 if kind == b"uuid":
