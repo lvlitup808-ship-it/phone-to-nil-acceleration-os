@@ -12,6 +12,7 @@ frozen cues for the clip's movement. A stub file is not a coach label. A labels 
 is skipped, not counted, and must not crash the gate.
 A symlink under labels/ is not a coach label, even when it points at a real JSON file.
 A labels directory that is itself a symlink is not the coach-label store. A manifest.json that is a symlink is not the golden-set manifest, even when it points at a real JSON file.
+A golden-set directory that is itself a symlink is not the store on disk, even when the link target has a real manifest, labels, and film.
 A cue value of NaN or Infinity is not a measurement and does not complete a label.
 Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. A renamed text, JSON, or JPEG file is not film: bytes 4:8 must be the ftyp box. The letters ftyp later in the header are not a box. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
@@ -226,7 +227,25 @@ def _content_id(path: Path) -> str | None:
     return digest.hexdigest()
 
 
+def _empty_progress() -> dict[str, Any]:
+    return {
+        "wr_labeled": 0,
+        "db_labeled": 0,
+        "inter_rater_done": False,
+        "disputed": 0,
+        "inter_rater_clips": 0,
+        "surfaces": 0,
+        "lighting_conditions": 0,
+        "wr_athletes": 0,
+        "db_athletes": 0,
+    }
+
+
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
+    # is_dir() and read_text() follow a directory symlink. An outside packet
+    # linked in as data/golden_set is not the golden set on disk.
+    if golden_dir.is_symlink():
+        return _empty_progress()
     manifest_path = golden_dir / "manifest.json"
     # read_text follows a symlink. An outside packet linked in as manifest.json
     # is not the golden-set manifest on disk.
