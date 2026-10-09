@@ -12,6 +12,8 @@ frozen cues for the clip's movement. A stub file is not a coach label. A labels 
 is skipped, not counted, and must not crash the gate.
 A symlink under labels/ is not a coach label, even when it points at a real JSON file.
 A labels directory that is itself a symlink is not the coach-label store.
+A file named <clip_id>_<other_coach>.json whose body names a different coach
+is not that coach's label and does not count.
 A cue value of NaN or Infinity is not a measurement and does not complete a label.
 Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
@@ -219,6 +221,22 @@ def _content_id(path: Path) -> str | None:
     return digest.hexdigest()
 
 
+
+def _filename_conflicts(path: Path, label: dict[str, Any]) -> bool:
+    """True when the stem names this clip and a different coach than the body.
+
+    Short fixture names (c1.json) have no coach suffix and are not a conflict.
+    """
+    clip_id = label.get("clip_id")
+    coach_id = label.get("coach_id")
+    if not isinstance(clip_id, str) or not isinstance(coach_id, str) or not clip_id:
+        return False
+    prefix = clip_id + "_"
+    if not path.stem.startswith(prefix):
+        return False
+    return _norm_token(path.stem[len(prefix):]) != _norm_token(coach_id)
+
+
 def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
     loaded = _load_json(golden_dir / "manifest.json")
     # A list or string is truthy, so `or {}` would not save the gate from .get.
@@ -270,6 +288,10 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
             continue
         label = _load_json(path)
         if not isinstance(label, dict):
+            continue
+        # A save is <clip_id>_<coach_id>.json. A file that names another coach
+        # than the body must not launder that body into the named coach's slot.
+        if _filename_conflicts(path, label):
             continue
         cid = str(label.get("clip_id", ""))
         coach = _norm_token(label.get("coach_id"))
