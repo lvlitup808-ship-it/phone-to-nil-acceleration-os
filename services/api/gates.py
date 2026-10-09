@@ -14,7 +14,7 @@ A symlink under labels/ is not a coach label, even when it points at a real JSON
 A labels directory that is itself a symlink is not the coach-label store. A manifest.json that is a symlink is not the golden-set manifest, even when it points at a real JSON file.
 A golden-set directory that is itself a symlink is not the store on disk, even when the link target has a real manifest, labels, and film.
 A cue value of NaN or Infinity is not a measurement and does not complete a label.
-Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. A renamed text, JSON, or JPEG file is not film: bytes 4:8 must be the ftyp box. The letters ftyp later in the header are not a box. An ftyp box whose size field is 0, 1, under 16, or larger than the file is not camera film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
+Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. A renamed text, JSON, or JPEG file is not film: bytes 4:8 must be the ftyp box. The letters ftyp later in the header are not a box. An ftyp box whose size field is 0, 1, under 16, or larger than the file is not camera film. A major brand outside the phone set (isom, mp42, and the listed ISO brands) is not camera film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
 characters and combining marks, so spelling variants, zero-width marks, and
 combining dots cannot inflate progress. A token that still contains a
@@ -116,6 +116,15 @@ def _film_paths(clip: dict[str, Any], root: Path) -> list[Path]:
 
 
 
+# Major brands a phone writes in the ftyp box. A 4-letter lookalike is not film.
+_PHONE_FTYP_BRANDS = frozenset({
+    b"isom", b"iso2", b"iso4", b"iso5", b"iso6",
+    b"mp41", b"mp42", b"mp71",
+    b"avc1", b"dash", b"MSNV",
+    b"3gp4", b"3gp5", b"3gp6",
+})
+
+
 def _is_camera_file(path: Path, root_resolved: Path) -> bool:
     """True only for a non-empty regular file at clips/<name>.mp4 under the golden root."""
     if not path.is_relative_to(root_resolved) or not path.is_file():
@@ -148,7 +157,9 @@ def _is_camera_file(path: Path, root_resolved: Path) -> bool:
     if box_size < 16 or box_size > file_size:
         return False
     brand = head[8:12]
-    return all(48 <= b <= 57 or 65 <= b <= 90 or 97 <= b <= 122 for b in brand)
+    # Alphanumeric is not enough: a note can spell ftyp + fake. Phone capture
+    # uses an ISO BMFF major brand. isom/mp42 stay valid so real clips count.
+    return brand in _PHONE_FTYP_BRANDS
 
 
 def has_film(clip: dict[str, Any], root: Path) -> bool:
