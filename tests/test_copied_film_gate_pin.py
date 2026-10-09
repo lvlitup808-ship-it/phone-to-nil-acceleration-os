@@ -50,7 +50,7 @@ def _seed(tmp_path, first: bytes, second: bytes):
 
 
 def test_byte_copy_does_not_count_twice(tmp_path):
-    payload = b"same-phone-clip"
+    payload = b"\x00\x00\x00\x18ftypisom" + b"same-phone-clip"
     _seed(tmp_path, payload, payload)
     assert (tmp_path / "clips" / "c1.mp4").stat().st_ino != (
         tmp_path / "clips" / "c2.mp4"
@@ -62,7 +62,7 @@ def test_byte_copy_does_not_count_twice(tmp_path):
 
 
 def test_distinct_bytes_still_count(tmp_path):
-    _seed(tmp_path, b"film-one", b"film-two")
+    _seed(tmp_path, b"\x00\x00\x00\x18ftypisom" + b"film-one", b"\x00\x00\x00\x18ftypisom" + b"film-two")
     progress = gates.get_progress(tmp_path)
     assert progress["wr_labeled"] == 2
     assert progress["surfaces"] == 2
@@ -70,7 +70,7 @@ def test_distinct_bytes_still_count(tmp_path):
 
 
 def test_shutil_copy_is_not_a_second_shoot(tmp_path):
-    _seed(tmp_path, b"original-shoot", b"placeholder")
+    _seed(tmp_path, b"\x00\x00\x00\x18ftypisom" + b"original-shoot", b"\x00\x00\x00\x18ftypisom" + b"placeholder")
     shutil.copy(tmp_path / "clips" / "c1.mp4", tmp_path / "clips" / "c2.mp4")
     progress = gates.get_progress(tmp_path)
     assert progress["wr_labeled"] == 1

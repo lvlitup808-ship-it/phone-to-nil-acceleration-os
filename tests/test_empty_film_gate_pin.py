@@ -1,7 +1,7 @@
 """Honesty pin: a zero-byte camera file is not film.
 
 has_film used to treat any existing path as film. A hand-placed empty
-.mp4 with present:true must not inflate wr_labeled. Only a non-empty file counts.
+.mp4 with present:true must not inflate wr_labeled. Only a non-empty file with an ftyp box counts.
 """
 
 from __future__ import annotations
@@ -52,6 +52,6 @@ def test_zero_byte_file_is_not_film(tmp_path):
 
 
 def test_non_empty_file_still_counts(tmp_path):
-    _seed(tmp_path, b"x")
+    _seed(tmp_path, b"\x00\x00\x00\x18ftypisom" + b"x")
     progress = gates.get_progress(tmp_path)
     assert progress["wr_labeled"] == 1
