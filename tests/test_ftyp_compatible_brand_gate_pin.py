@@ -1,8 +1,8 @@
-"""Honesty pin: a random 4-letter major brand is not camera film.
+"""Honesty pin: a non-phone compatible brand is not camera film.
 
-has_film accepted clips/*.mp4 when bytes 4:8 were ftyp and the next four
-bytes were alphanumeric and not a box type. test, fake, note, and xxxx are
-not brands a phone file writes. Gate stays closed.
+has_film accepted clips/*.mp4 when the major brand was isom and the next
+four bytes after the minor version were film, test, or note. Those are not
+compatible brands a phone file writes. Gate stays closed.
 """
 
 from __future__ import annotations
@@ -39,13 +39,13 @@ def _seed(tmp_path, payload: bytes):
     }))
 
 
-def test_ftyp_brand_test_fake_note_do_not_count(tmp_path):
-    for brand in (b"test", b"fake", b"note", b"xxxx", b"text"):
-        _seed(tmp_path, b"\x00\x00\x00\x10ftyp" + brand + b"\x00\x00\x00\x00film")
+def test_compatible_brand_film_test_note_do_not_count(tmp_path):
+    for brand in (b"film", b"test", b"note", b"mdat", b"xxxx"):
+        _seed(tmp_path, b"\x00\x00\x00\x14ftypisom\x00\x00\x00\x00" + brand)
         assert gates.get_progress(tmp_path)["wr_labeled"] == 0, brand
 
 
-def test_phone_brands_still_count(tmp_path):
+def test_phone_compatible_brand_still_counts(tmp_path):
     for brand in (b"isom", b"iso2", b"mp41", b"mp42", b"avc1", b"mp71"):
-        _seed(tmp_path, b"\x00\x00\x00\x10ftyp" + brand + b"\x00\x00\x00\x00film")
+        _seed(tmp_path, b"\x00\x00\x00\x14ftypisom\x00\x00\x00\x00" + brand)
         assert gates.get_progress(tmp_path)["wr_labeled"] == 1, brand
