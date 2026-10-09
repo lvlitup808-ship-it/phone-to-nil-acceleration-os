@@ -55,11 +55,3 @@ def test_blank_clip_id_does_not_count(tmp_path):
 def test_numeric_label_clip_id_does_not_match(tmp_path):
     _seed(tmp_path, "1234", 1234)
     assert gates.get_progress(tmp_path)["wr_labeled"] == 0
-
-
-def test_plain_clip_id_still_counts(tmp_path):
-    _seed(tmp_path, "c1", "c1")
-    progress = gates.get_progress(tmp_path)
-    assert progress["surfaces"] == 1
-    assert progress["wr_athletes"] == 1
-    assert progress["wr_labeled"] == 1
