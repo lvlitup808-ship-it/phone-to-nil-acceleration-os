@@ -12,6 +12,7 @@ frozen cues for the clip's movement. A stub file is not a coach label. A labels 
 is skipped, not counted, and must not crash the gate.
 A symlink under labels/ is not a coach label, even when it points at a real JSON file.
 A labels directory that is itself a symlink is not the coach-label store.
+A second file with the same events and cues is a copy, not a second coach.
 A cue value of NaN or Infinity is not a measurement and does not complete a label.
 Fixture entries (no film) never count. camera present must be JSON true; 1 and "true" are not film. A camera path that is not a string is not film and must not crash the gate. A camera value that is not an object is not film. A zero-byte file is not film. A symlink is not film, even when it points at a non-empty file inside the golden root. Only a non-empty clips/*.mp4 counts; manifest.json, a label file, or a .txt is not film. Two clips that resolve to the same camera file count once: the first manifest row keeps the file, later rows do not. A hardlink of that file is the same film even when the path differs. A byte copy is the same film even when the inode differs. Coach, athlete, surface, and lighting
 ids are compared case-insensitively, after NFKC and after dropping Unicode format
@@ -198,6 +199,14 @@ def _protocol_ok(label: dict[str, Any], manifest: dict[str, Any]) -> bool:
     return got.strip() == expected.strip()
 
 
+
+def _measurement_id(label: dict[str, Any]) -> str:
+    """Stable digest of the events and cues. Coach id is not part of the measurement."""
+    payload = {"events": label.get("events"), "cues": label.get("cues")}
+    raw = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
 def _file_id(path: Path) -> tuple[int, int] | None:
     """Device and inode. Hardlinks share this even when the path differs."""
     try:
@@ -256,6 +265,7 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
 
     coaches: dict[str, set[str]] = {}
     disputed: set[str] = set()
+    claimed_measurements: dict[str, set[str]] = {}
     labels_dir = golden_dir / "labels"
     # is_dir() follows a directory symlink. glob would then read a label packet
     # that is not the store on disk. A link is not labels/.
@@ -282,6 +292,12 @@ def get_progress(golden_dir: Path = GOLDEN_DIR) -> dict[str, Any]:
         if label.get("disputed") or filmed[cid].get("disputed"):
             disputed.add(cid)
             continue
+        # Same events and cues with a new coach_id is a copied packet, not inter-rater.
+        measurement = _measurement_id(label)
+        seen = claimed_measurements.setdefault(cid, set())
+        if measurement in seen:
+            continue
+        seen.add(measurement)
         coaches.setdefault(cid, set()).add(coach)
 
     labeled = [filmed[cid] for cid in coaches if cid not in disputed]

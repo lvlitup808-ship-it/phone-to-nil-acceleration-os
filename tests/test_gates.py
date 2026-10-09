@@ -58,13 +58,15 @@ def test_real_labels_count_and_inter_rater(tmp_path):
         }
         for i in range(5)
     ]
-    complete = {
-        "events": {name: {"t_ms": 100} for name in EVENTS["release"]},
-        "cues": {name: {"value": 1.0, "disputed": False} for name in CUES["release"]},
-    }
-    labels = [{"clip_id": f"c{i}", "coach_id": "a", **complete} for i in range(5)]
-    labels += [{"clip_id": f"c{i}", "coach_id": "b", **complete} for i in range(4)]
-    labels += [{"clip_id": "c4", "coach_id": "b", "disputed": True, **complete}]
+    def packet(t_ms: int) -> dict:
+        return {
+            "events": {name: {"t_ms": t_ms} for name in EVENTS["release"]},
+            "cues": {name: {"value": 1.0, "disputed": False} for name in CUES["release"]},
+        }
+    # Coach b uses a different timestamp. A copied packet is not inter-rater.
+    labels = [{"clip_id": f"c{i}", "coach_id": "a", **packet(100)} for i in range(5)]
+    labels += [{"clip_id": f"c{i}", "coach_id": "b", **packet(240)} for i in range(4)]
+    labels += [{"clip_id": "c4", "coach_id": "b", "disputed": True, **packet(240)}]
     p = gates.get_progress(_golden_dir(tmp_path, clips, labels))
     assert p["wr_labeled"] == 4
     assert p["disputed"] == 1
