@@ -214,7 +214,7 @@ def _has_media_box(path: Path, file_size: int, ftyp_size: int) -> bool:
                     payload = handle.read(size - 8)
                     return (
                         len(payload) == size - 8
-                        and any(not (b <= 0x1F or b == 0x7F) for b in payload)
+                        and any(0x21 <= b <= 0x7E for b in payload)
                     )
                 # uuid is 8-byte header + 16-byte user type. Shorter is not a spacer.
                 if kind == b"uuid":
