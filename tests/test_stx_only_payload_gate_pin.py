@@ -1,6 +1,6 @@
 """Honesty pin: a STX-only mdat or moov payload is not camera film.
 
-ASCII STX (0x02) is a control character, not a sample. has_film must reject
+ASCII STX (0x02) is a C0 control character, not a sample. has_film must reject
 it so a padded box cannot open the golden-set gate. Gate stays closed.
 No NIL numbers.
 """
