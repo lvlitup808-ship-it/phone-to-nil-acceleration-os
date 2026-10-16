@@ -21,6 +21,7 @@ _DOLLAR = re.compile(r"\$\s*\d")
 _PERCENTILE = re.compile(r"\b(p25|p50|p75)\b\s*[:=]\s*\d", re.IGNORECASE)
 _MAE = re.compile(r"\bMAE\b\s*[:=]\s*\d", re.IGNORECASE)
 _COMPOSITE = re.compile(r"\bcomposite\s*[:=]\s*\d", re.IGNORECASE)
+_ASSIGNED_NUMBER = re.compile(r"\bp(25|50|75)\s*=\s*\d+", re.IGNORECASE)
 
 
 def test_estimate_band_returns_nulls() -> None:
@@ -43,7 +44,4 @@ def test_valuation_engine_source_has_no_hardcoded_numbers() -> None:
     assert _PERCENTILE.search(text) is None
     assert _MAE.search(text) is None
     assert _COMPOSITE.search(text) is None
-    assert "p25=None" in text or "p25 = None" in text or "p25: int | None = None" not in text  # allow the model default, but engine must not assign numbers
-    # engine itself must not assign a number
-    assert not re.search(r"p2[57]\s*=\s*\d", text)
-    assert not re.search(r"p50\s*=\s*\d", text)
+    assert _ASSIGNED_NUMBER.search(text) is None
