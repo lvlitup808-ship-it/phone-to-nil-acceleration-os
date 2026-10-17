@@ -11,7 +11,6 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from packages.shared.models import NILBand
 from services.api.app import app
 from services.valuation.engine import estimate_band
 
