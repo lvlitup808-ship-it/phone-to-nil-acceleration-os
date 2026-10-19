@@ -7,7 +7,7 @@ not write labels/, must not count as film, and must not move GET /gates/golden.
 from fastapi.testclient import TestClient
 
 from services.api.app import app
-from services.api.gates import GOLDEN_DIR, get_progress, gate_state
+from services.api.gates import GOLDEN_DIR, gate_state, get_progress
 
 client = TestClient(app)
 
