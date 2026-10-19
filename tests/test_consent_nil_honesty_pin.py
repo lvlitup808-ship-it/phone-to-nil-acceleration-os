@@ -66,7 +66,10 @@ def test_consent_revoke_receipt_has_no_nil_numbers():
     assert set(body) <= REVOKE_KEYS
     for key in FORBIDDEN_KEYS:
         assert key not in body
-    text = _blob(body)
+    # Cryptographic signature and receipt_id are hex; digit sequences like
+    # "6000" can appear by chance. Check semantic fields only.
+    semantic = {k: v for k, v in body.items() if k not in ("signature", "receipt_id")}
+    text = _blob(semantic)
     for needle in INVENTED:
         assert needle not in text
     assert "nil" not in text.lower()
