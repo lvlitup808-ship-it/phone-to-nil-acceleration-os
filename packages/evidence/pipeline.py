@@ -21,6 +21,8 @@ class EvidencePipeline:
         hits = []
         q = query.lower()
         for row in self.drills:
+            if row.get("coach_reviewed") is not True:
+                continue
             hay = f"{row['name']} {row['cue']} {row['cue_language']}".lower()
             score = 1.0 if cue and row["cue"] == cue else (0.7 if cue and cue in hay else 0.0)
             if q and any(tok in hay for tok in q.split()):

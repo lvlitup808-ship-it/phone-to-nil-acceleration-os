@@ -97,6 +97,12 @@ def spec(clip_id: str, golden_dir: Path | None = None) -> dict[str, Any]:
 def save(body: LabelIn, golden_dir: Path | None = None) -> dict[str, Any]:
     golden_dir = golden_dir or GOLDEN_DIR
     s = spec(body.clip_id, golden_dir)
+    clip = next(c for c in _manifest(golden_dir).get("clips", []) if c.get("clip_id") == body.clip_id)
+    # Import here so the label module does not import the API package at load.
+    from services.api.gates import has_film
+
+    if not has_film(clip, golden_dir):
+        raise LabelError(409, f"{body.clip_id} has no film on disk; fixture clips cannot be labeled")
     if not body.excluded:
         if sorted(body.events) != sorted(s["events"]):
             raise LabelError(422, f"events must be exactly {s['events']}")

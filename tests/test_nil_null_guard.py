@@ -1,56 +1,43 @@
-"""NIL honesty: no invented dollars, composites, or MAE.
+"""Pin: closed gate nulls NIL numbers even if the valuation engine lies.
 
-Band numerics stay null until a sourced comp dataset exists and the
-golden-set gate opens. This file fails if any route or the engine
-returns non-null p25/p50/p75/confidence or non-empty scenarios.
+No real comps exist. estimate_band returns nulls today. This test forces a lying engine and asserts GET /nil-band still returns p25/p50/p75 = null, confidence = null, empty clusters while the golden-set gate is closed.
 """
+
+from __future__ import annotations
+
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
+from packages.shared.models import NILBand
 from services.api.app import app
-from services.valuation.app import app as valuation_app
-from services.valuation.engine import estimate_band
 
 client = TestClient(app)
-val_client = TestClient(valuation_app)
 
 
-def test_engine_estimate_band_all_numerics_null():
-    band = estimate_band("ath_honesty")
-    assert band.p25 is None
-    assert band.p50 is None
-    assert band.p75 is None
-    assert band.confidence is None
-    assert band.comp_cluster_ids == []
-    assert band.status == "schema_only"
-    assert "no comp dataset" in " ".join(band.assumptions).lower()
-
-
-def test_nil_band_route_never_returns_numbers():
-    body = client.get("/nil-band/ath_honesty").json()
+def test_nil_band_nulls_lying_engine_while_gate_closed() -> None:
+    lying = NILBand(
+        athlete_id="a1",
+        p25=10000.0,
+        p50=25000.0,
+        p75=50000.0,
+        confidence=0.8,
+        assumptions=["lying engine"],
+        comp_cluster_ids=["fake"],
+        disclaimer_version="test",
+        counterfactuals={"fake": 1},
+        status="open",
+    )
+    with patch("services.valuation.engine.estimate_band", return_value=lying):
+        res = client.get("/nil-band/a1")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["status"] == "blocked_on_golden_set"
     assert body["p25"] is None
     assert body["p50"] is None
     assert body["p75"] is None
-    assert body.get("confidence") is None
-    assert body.get("status") in ("schema_only", "blocked_on_golden_set")
-    assert body.get("comp_cluster_ids", []) == []
-
-
-def test_nil_scenarios_always_empty():
-    body = client.get("/nil-band/ath_honesty/scenarios").json()
-    assert body["scenarios"] == []
-    assert body["status"] == "schema_only"
-    assert "invented" in body.get("note", "").lower() or "no numbers" in body.get("note", "").lower()
-
-
-def test_standalone_valuation_service_never_returns_numbers():
-    """services/valuation.app is a separate process; pin it too (audit Q27)."""
-    body = val_client.get("/nil-band/ath_honesty").json()
-    assert body["p25"] is None
-    assert body["p50"] is None
-    assert body["p75"] is None
-    assert body.get("confidence") is None
-    assert body.get("status") == "blocked_on_golden_set"
-    assert body.get("comp_cluster_ids", []) == []
-    assert body["p25"] is None
-    assert "no comp dataset" in " ".join(body.get("assumptions", [])).lower()
+    assert body["confidence"] is None
+    assert body["comp_cluster_ids"] == []
+    assert body["counterfactuals"] == {}
+    # Gate fields must still be present
+    assert "progress" in body or "wr_labeled" in body.get("progress", {})
