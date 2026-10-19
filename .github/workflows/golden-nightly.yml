@@ -1,4 +1,5 @@
 name: Golden nightly
+# Live contract: NIL p25/p50/p75 are null. Do not echo a dollar, MAE, or composite.
 on:
   schedule:
     - cron: "20 6 * * *"
