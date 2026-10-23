@@ -83,6 +83,7 @@ packages/evidence           RAG evidence loop
 packages/biomech            Cue extraction
 data/samples                Templates, drills, comps
 docs/legal                  Privacy, consent, NIL, bias
+reference/accountable_agent Accountable-agent action gateway (reference model, stdlib, simulated adapter)
 ```
 
 ## NIL disclaimer
@@ -100,5 +101,6 @@ Ranges only, and none are computed yet: band numbers are `null` until a sourced 
 | @0xcodila Jev setup | `docs/attachments/x-posts.md` | Decision-density audit |
 | Position templates | `data/samples/position_templates.json` | WR/DB/RB/OL |
 | Drill library | `data/samples/drills.json` | Prescription seed |
+| Accountable Agent acceptance package | `reference/accountable_agent/` | Reference action gateway + acceptance tests; local only, not wired into the API, sends nothing |
 
 License: Apache-2.0. Default branch `main`.
