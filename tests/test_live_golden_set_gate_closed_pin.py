@@ -7,17 +7,16 @@ labeled clips. No NIL numbers are computed.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from services.api.gates import gate_state, get_progress
-
 
 ROOT = Path(__file__).resolve().parents[1]
 GOLDEN = ROOT / "data" / "golden_set"
 
 
 def test_live_manifest_has_no_film():
-    import json
     manifest = json.loads((GOLDEN / "manifest.json").read_text())
     assert manifest.get("golden_set") == "pending"
     for clip in manifest.get("clips", []):
