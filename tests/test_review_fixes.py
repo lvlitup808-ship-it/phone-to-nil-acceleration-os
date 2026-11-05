@@ -36,6 +36,25 @@ def test_pose_assess_with_unknown_consent_is_rejected(tmp_path, monkeypatch):
     assert not (tmp_path / "clp_rf2").exists()
 
 
+def test_pose_assess_rejects_consent_for_another_athlete(tmp_path, monkeypatch):
+    monkeypatch.setenv("ARTIFACTS_DIR", str(tmp_path))
+    grant = client.post("/consent", json={"athlete_id": "rf_owner", "consent_scope": ["capture"]})
+    assert grant.status_code == 200
+    before = set(STORE["assessments"])
+    res = client.post(
+        "/pose/assess",
+        json={
+            "athlete_id": "rf_other",
+            "clip_id": "clp_rf_other",
+            "movement": "release",
+            "consent_id": grant.json()["consent_id"],
+        },
+    )
+    assert res.status_code == 403
+    assert set(STORE["assessments"]) == before
+    assert not (tmp_path / "clp_rf_other").exists()
+
+
 def test_gct_below_floor_is_not_reported_as_the_floor():
     seq = FixturePoseAdapter().infer(None)
     cal = Calibration(mode="field_line", confidence=0.8, meters_per_pixel=0.01, debug_points=[])

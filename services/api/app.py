@@ -234,6 +234,8 @@ def pose_assess(body: PoseAssessIn) -> dict[str, Any]:
         if consent.get("revoked"):
             # Checked before the pipeline runs so no debug files are written for revoked consent.
             raise HTTPException(403, "consent revoked")
+        if consent["athlete_id"] != body.athlete_id:
+            raise HTTPException(403, "consent belongs to a different athlete")
     frames, fps = None, 60.0
     if body.use_real_frames:
         # Off unless the operator sets POSE_REAL_FRAMES; the default stays fixture poses.
