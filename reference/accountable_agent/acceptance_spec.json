@@ -1,0 +1,41 @@
+{
+  "version": "0.1-reference",
+  "scope": "Action lifecycle after a validated outcome contract; not a production security boundary",
+  "transitions": {
+    "PLANNED": ["AUTHORIZED", "CANCELLED"],
+    "AUTHORIZED": ["PLANNED", "DISPATCHED", "CANCELLED"],
+    "DISPATCHED": ["CONFIRMED", "UNKNOWN", "FAILED"],
+    "UNKNOWN": ["CONFIRMED", "RECONCILED_FAILED"],
+    "CONFIRMED": ["VERIFIED"],
+    "VERIFIED": ["EVALUATED"],
+    "EVALUATED": ["CLOSED"],
+    "CLOSED": [],
+    "FAILED": [],
+    "CANCELLED": [],
+    "RECONCILED_FAILED": []
+  },
+  "preconditions": {
+    "PLANNED->AUTHORIZED": ["authenticated approver boundary", "independent veto checks pass", "current authority", "deadline", "budget", "exact actor/contract/action binding"],
+    "AUTHORIZED->DISPATCHED": ["all vetoes rechecked", "approval hash matches", "nonce unused", "approval current", "durable intent committed"],
+    "DISPATCHED->CONFIRMED": ["trusted adapter execution record"],
+    "UNKNOWN->CONFIRMED": ["trusted reconciliation record attests execution"],
+    "UNKNOWN->RECONCILED_FAILED": ["trusted reconciliation record confirms nonexecution"],
+    "CONFIRMED->VERIFIED": ["execution evidence present"],
+    "VERIFIED->EVALUATED": ["original measurement plan hash", "explicit impact status", "comparison and analysis records if claiming supported impact"],
+    "EVALUATED->CLOSED": ["evaluation persisted"]
+  },
+  "evidence_classes": {
+    "dispatch_attempt": {"supports": "gateway committed intent to attempt dispatch", "does_not_support": ["network dispatch happened", "external execution"]},
+    "execution": {"supports": "trusted external system attests execution", "does_not_support": ["recipient read message", "business impact"]},
+    "delivery": {"supports": "recipient system attests delivery", "does_not_support": ["human understanding", "causality"], "implementation": "adapter-specific validation required"},
+    "content_integrity": {"supports": "bytes match approved content", "does_not_support": ["factual accuracy"], "implementation": "adapter-specific delivered-content verification required"},
+    "content_accuracy": {"supports": "content validated against authoritative facts", "implementation": "domain-specific validator required"},
+    "impact_report": {"supports": "report references locked measurement plan", "does_not_support": ["automatically valid causal inference"], "implementation": "independent statistical and domain review required"}
+  },
+  "reconciliation_policy": {
+    "unknown_or_unavailable": "remain UNKNOWN; human review required; reserve budget; no automatic redispatch",
+    "confirmed_nonexecution": "RECONCILED_FAILED; any new attempt requires a new action and approval",
+    "confirmed_execution": "CONFIRMED with execution evidence"
+  },
+  "forbidden": ["PLANNED->DISPATCHED", "UNKNOWN->DISPATCHED", "DISPATCHED->VERIFIED", "CONFIRMED->EVALUATED", "replayed nonce", "expired approval", "changed action using old approval", "authority expansion through delegation"]
+}

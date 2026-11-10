@@ -1,0 +1,29 @@
+test_absent_policy_service_fails_closed (test_acceptance.Acceptance.test_absent_policy_service_fails_closed) ... ok
+test_budget_reserved_by_uncertain_action (test_acceptance.Acceptance.test_budget_reserved_by_uncertain_action) ... ok
+test_cancellation_after_effect_does_not_claim_rollback (test_acceptance.Acceptance.test_cancellation_after_effect_does_not_claim_rollback) ... ok
+test_cancellation_before_dispatch_blocks_action (test_acceptance.Acceptance.test_cancellation_before_dispatch_blocks_action) ... ok
+test_confirmed_nonexecution_is_reconciled_failed (test_acceptance.Acceptance.test_confirmed_nonexecution_is_reconciled_failed) ... ok
+test_crash_restart_reconciles_persisted_intent (test_acceptance.Acceptance.test_crash_restart_reconciles_persisted_intent) ... ok
+test_delivery_confirmation_without_record_is_unknown (test_acceptance.Acceptance.test_delivery_confirmation_without_record_is_unknown) ... ok
+test_execution_and_impact_reported_separately (test_acceptance.Acceptance.test_execution_and_impact_reported_separately) ... ok
+test_expired_approval (test_acceptance.Acceptance.test_expired_approval) ... ok
+test_failure_in_policy_does_not_dispatch (test_acceptance.Acceptance.test_failure_in_policy_does_not_dispatch) ... ok
+test_injection_cannot_grant_authority (test_acceptance.Acceptance.test_injection_cannot_grant_authority) ... ok
+test_model_flags_cannot_override_independent_veto (test_acceptance.Acceptance.test_model_flags_cannot_override_independent_veto) ... ok
+test_new_measurement_plan_rejected (test_acceptance.Acceptance.test_new_measurement_plan_rejected) ... ok
+test_nonce_replay_never_calls_adapter_again (test_acceptance.Acceptance.test_nonce_replay_never_calls_adapter_again) ... ok
+test_parent_revocation_blocks_already_approved_child (test_acceptance.Acceptance.test_parent_revocation_blocks_already_approved_child) ... ok
+test_recipient_mutation_invalidates_approval (test_acceptance.Acceptance.test_recipient_mutation_invalidates_approval) ... ok
+test_seeded_action_mutation_property (test_acceptance.Acceptance.test_seeded_action_mutation_property) ... ok
+test_seeded_delegation_subset_property (test_acceptance.Acceptance.test_seeded_delegation_subset_property) ... ok
+test_seeded_lifecycle_safety_property (test_acceptance.Acceptance.test_seeded_lifecycle_safety_property) ... ok
+test_skip_authorization (test_acceptance.Acceptance.test_skip_authorization) ... ok
+test_timeout_reconciliation_does_not_resubmit (test_acceptance.Acceptance.test_timeout_reconciliation_does_not_resubmit) ... ok
+test_unknown_with_unavailable_reconciliation_stays_unknown (test_acceptance.Acceptance.test_unknown_with_unavailable_reconciliation_stays_unknown) ... ok
+test_verification_cannot_skip_external_confirmation (test_acceptance.Acceptance.test_verification_cannot_skip_external_confirmation) ... ok
+test_real_execution_reconciliation_and_replay (test_real_integration.RealIntegration.test_real_execution_reconciliation_and_replay) ... skipped 'UNPROVEN: real sandbox adapter not configured'
+
+----------------------------------------------------------------------
+Ran 24 tests in 0.178s
+
+OK (skipped=1)
